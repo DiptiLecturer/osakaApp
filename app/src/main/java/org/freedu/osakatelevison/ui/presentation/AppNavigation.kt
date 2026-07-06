@@ -45,10 +45,9 @@ fun MainAppScreen() {
             })
         }) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            // Simple placeholder routing logic.
-            // Swap this out for a proper NavHost if you use Jetpack Navigation Component!
+
             when (currentScreen) {
-                BottomNavItem.Home -> Text("Home Screen Content")
+                BottomNavItem.Home -> HomeScreen()
                 BottomNavItem.Product -> Text("Products Grid View")
                 BottomNavItem.Gallery -> Text("Photo/Video Gallery")
                 BottomNavItem.Contact -> Text("Contact Form & Details")

@@ -72,4 +72,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
     implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
     implementation("com.google.code.gson:gson:2.10.1")
+
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

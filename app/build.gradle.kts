@@ -49,29 +49,40 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    // 1. Jetpack Compose BOM (Manages core Compose versions seamlessly)
-    val composeBom = platform("androidx.compose:compose-bom:2026.04.01")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
+    // Compose BOM
+    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.04.01"))
 
-    // 2. Material Design 3 & Extended Icons (for "Material Icon")
+// Compose
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // 3. Navigation for Compose
+// Activity
+    implementation("androidx.activity:activity-compose:1.11.0")
+
+// Navigation
     implementation("androidx.navigation:navigation-compose:2.8.8")
 
-    // 4. Lifecycle (ViewModel & LiveData support for Compose)
-    val lifecycleVersion = "2.11.0"
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
-    implementation("androidx.compose.runtime:runtime-livedata") // Allows you to use observeAsState()
+// Lifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.11.0")
+    implementation("androidx.compose.runtime:runtime-livedata")
 
-    // 5. Retrofit & Gson (Networking & JSON Parsing)
-    val retrofitVersion = "2.11.0"
-    implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
-    implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
+// Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+// Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
 
+// Images
     implementation("io.coil-kt:coil-compose:2.6.0")
 }

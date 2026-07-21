@@ -40,7 +40,7 @@ sealed class BottomNavItem(val route: String, val title: String, val icon: Image
     object Home : BottomNavItem("home", "Home", Icons.Default.Home)
     object Product : BottomNavItem("product", "Product", Icons.Default.ShoppingCart)
     object Gallery :
-        BottomNavItem("gallery", "Gallery", Icons.Default.MailOutline) // Or custom gallery icon
+        BottomNavItem("gallery", "Gallery", Icons.Default.MailOutline)
 
     object Contact : BottomNavItem("contact", "Contact", Icons.Default.Phone)
     object About : BottomNavItem("about", "About", Icons.Default.Info)
@@ -63,7 +63,7 @@ fun MainAppScreen() {
                 BottomNavItem.Product -> Text("Products Grid View")
                 BottomNavItem.Gallery -> Text("Photo/Video Gallery")
                 BottomNavItem.Contact -> Text("Contact Form & Details")
-                BottomNavItem.About -> Text("About Osaka TV Details")
+                BottomNavItem.About ->AboutUsScreen()
 
             }
         }

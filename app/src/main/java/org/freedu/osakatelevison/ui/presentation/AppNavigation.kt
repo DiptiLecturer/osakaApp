@@ -59,6 +59,10 @@ fun MainAppScreen() {
 
             when (currentScreen) {
                 BottomNavItem.Home -> HomeScreen()
+                BottomNavItem.Product -> OsakaProductScreen()
+                BottomNavItem.Gallery -> Text("Photo/Video Gallery")
+                BottomNavItem.Contact -> Text("Contact Form & Details")
+                BottomNavItem.About -> Text("About Osaka TV Details")
                 BottomNavItem.Product -> Text("Products Grid View")
                 BottomNavItem.Gallery -> GalleryScreen()
                 BottomNavItem.Contact -> ContactScreen()

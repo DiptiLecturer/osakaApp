@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MailOutline
@@ -39,9 +40,7 @@ import org.freedu.osakatelevison.ui.theme.OsakaRedLight
 sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomNavItem("home", "Home", Icons.Default.Home)
     object Product : BottomNavItem("product", "Product", Icons.Default.ShoppingCart)
-    object Gallery :
-        BottomNavItem("gallery", "Gallery", Icons.Default.MailOutline)
-
+    object Gallery : BottomNavItem("gallery", "Gallery", Icons.Default.Collections) // Updated Icon
     object Contact : BottomNavItem("contact", "Contact", Icons.Default.Phone)
     object About : BottomNavItem("about", "About", Icons.Default.Info)
 }
@@ -61,8 +60,11 @@ fun MainAppScreen() {
             when (currentScreen) {
                 BottomNavItem.Home -> HomeScreen()
                 BottomNavItem.Product -> Text("Products Grid View")
-                BottomNavItem.Gallery -> Text("Photo/Video Gallery")
-                BottomNavItem.Contact -> Text("Contact Form & Details")
+                BottomNavItem.Gallery ->  GalleryScreen(
+                // Pass real API list here if you have ViewModel/state, e.g.:
+                // apiImages = viewModel.galleryImagesList
+            )
+                BottomNavItem.Contact -> ContactScreen()
                 BottomNavItem.About ->AboutUsScreen()
 
             }

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -49,6 +50,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2026.04.01"))
     androidTestImplementation(platform("androidx.compose:compose-bom:2026.04.01"))
@@ -77,11 +80,13 @@ dependencies {
 // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
-// Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    implementation("com.google.code.gson:gson:2.10.1")
+    // Supabase
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.2.0"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt") // If loading gallery images from Supabase Storage
+
+    // Ktor Client for Kotlin Multiplatform / Android
+    implementation("io.ktor:ktor-client-android:2.3.8")
 
 // Images
     implementation("io.coil-kt:coil-compose:2.6.0")

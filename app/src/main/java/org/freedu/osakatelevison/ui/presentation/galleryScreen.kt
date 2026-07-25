@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Collections
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,40 +28,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.freedu.osakatelevison.R
+import org.freedu.osakatelevison.data.GalleryUiState
+import org.freedu.osakatelevison.data.GalleryViewModel
+import org.freedu.osakatelevison.data.SupabaseGalleryItem
 import org.freedu.osakatelevison.ui.theme.*
 
-// Data class representing an item in the gallery
-data class GalleryItem(
-    val id: Int,
-    val title: String,
-    val imageUrl: String? = null // API image URL
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
-    // Pass API images list here. Defaults to 8 items testing local fallback 'aboutosaka.jpeg'
-    apiImages: List<GalleryItem> = List(8) { index ->
-        GalleryItem(
-            id = index + 1,
-            title = "OSAKA Display #${index + 1}",
-            imageUrl = null // Set your actual API URL string here when available
-        )
-    }
+    viewModel: GalleryViewModel = viewModel()
 ) {
     val isDark = isSystemInDarkTheme()
 
-    // Dynamic color tokens matching color.kt
     val bgColor = if (isDark) DarkBackground else LightBackground
     val textColor = if (isDark) DarkForeground else LightForeground
     val mutedTextColor = if (isDark) DarkMutedForeground else LightMutedForeground
     val cardBgColor = if (isDark) DarkSecondary else LightSecondary
     val borderColor = if (isDark) DarkBorder else LightBorder
 
-    // Selected image state for Full-Screen Preview Dialog
+    val uiState by viewModel.uiState.collectAsState()
     var selectedImageIndex by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
@@ -82,63 +73,92 @@ fun GalleryScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = bgColor
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = bgColor)
             )
         },
         containerColor = bgColor
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // Header / Subtitle Section
-            Text(
-                text = "Showroom & Product Highlights",
-                fontSize = 14.sp,
-                color = mutedTextColor,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            // Responsive 2-Column Grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                itemsIndexed(apiImages) { index, item ->
-                    GalleryGridItem(
-                        item = item,
-                        cardBgColor = cardBgColor,
-                        borderColor = borderColor,
-                        textColor = textColor,
-                        onClick = { selectedImageIndex = index }
+            when (val state = uiState) {
+                is GalleryUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = OsakaRed
                     )
                 }
-            }
-        }
-    }
 
-    // Full Screen Zoom/Preview Dialog
-    selectedImageIndex?.let { index ->
-        val currentItem = apiImages.getOrNull(index)
-        if (currentItem != null) {
-            FullScreenImagePreview(
-                item = currentItem,
-                onDismiss = { selectedImageIndex = null }
-            )
+                is GalleryUiState.Error -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = state.message, color = textColor)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { viewModel.fetchGalleryImages() },
+                            colors = ButtonDefaults.buttonColors(containerColor = OsakaRed)
+                        ) {
+                            Icon(Icons.Outlined.Refresh, contentDescription = null)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Retry")
+                        }
+                    }
+                }
+
+                is GalleryUiState.Success -> {
+                    val images = state.items
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = "Showroom & Product Highlights",
+                            fontSize = 14.sp,
+                            color = mutedTextColor,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(bottom = 24.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            itemsIndexed(images) { index, item ->
+                                GalleryGridItem(
+                                    item = item,
+                                    cardBgColor = cardBgColor,
+                                    borderColor = borderColor,
+                                    textColor = textColor,
+                                    onClick = { selectedImageIndex = index }
+                                )
+                            }
+                        }
+                    }
+
+                    // Full Screen Dialog Preview
+                    selectedImageIndex?.let { index ->
+                        val currentItem = images.getOrNull(index)
+                        if (currentItem != null) {
+                            FullScreenImagePreview(
+                                item = currentItem,
+                                onDismiss = { selectedImageIndex = null }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun GalleryGridItem(
-    item: GalleryItem,
+    item: SupabaseGalleryItem,
     cardBgColor: Color,
     borderColor: Color,
     textColor: Color,
@@ -147,12 +167,11 @@ private fun GalleryGridItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(0.85f) // Keeps proportional square-like card aspect
+            .aspectRatio(0.85f)
             .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = cardBgColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -161,54 +180,41 @@ private fun GalleryGridItem(
                     .weight(1f)
                     .background(LightMuted)
             ) {
-                if (!item.imageUrl.isNull_or_Empty()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .crossfade(true)
-                            // Local fallback to 'aboutosaka' if remote image fails
-                            .error(R.drawable.aboutosaka)
-                            .placeholder(R.drawable.aboutosaka)
-                            .build(),
-                        contentDescription = item.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    // Default check with local drawables image (aboutosaka.jpeg)
-                    Image(
-                        painter = painterResource(id = R.drawable.aboutosaka),
-                        contentDescription = item.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .error(R.drawable.aboutosaka)
+                        .placeholder(R.drawable.aboutosaka)
+                        .build(),
+                    contentDescription = item.caption ?: "Gallery Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
-            // Caption Section
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
-            ) {
-                Text(
-                    text = item.title,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = textColor,
-                    maxLines = 1
-                )
+            item.caption?.let { captionText ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = captionText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textColor,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
 }
 
-// Extension to check for empty strings safely
-private fun String?.isNull_or_Empty(): Boolean = this == null || this.trim().isEmpty()
-
 @Composable
 private fun FullScreenImagePreview(
-    item: GalleryItem,
+    item: SupabaseGalleryItem,
     onDismiss: () -> Unit
 ) {
     Dialog(
@@ -220,7 +226,6 @@ private fun FullScreenImagePreview(
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.92f))
         ) {
-            // Dismiss Button
             IconButton(
                 onClick = onDismiss,
                 modifier = Modifier
@@ -236,7 +241,6 @@ private fun FullScreenImagePreview(
                 )
             }
 
-            // Image Display
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,37 +248,29 @@ private fun FullScreenImagePreview(
                     .align(Alignment.Center)
                     .padding(16.dp)
             ) {
-                if (!item.imageUrl.isNull_or_Empty()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .crossfade(true)
-                            .error(R.drawable.aboutosaka)
-                            .build(),
-                        contentDescription = item.title,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.aboutosaka),
-                        contentDescription = item.title,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .error(R.drawable.aboutosaka)
+                        .build(),
+                    contentDescription = item.caption,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
-            // Title Footer
-            Text(
-                text = item.title,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-            )
+            item.caption?.let { captionText ->
+                Text(
+                    text = captionText,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 32.dp)
+                )
+            }
         }
     }
 }

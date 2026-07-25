@@ -60,10 +60,7 @@ fun MainAppScreen() {
             when (currentScreen) {
                 BottomNavItem.Home -> HomeScreen()
                 BottomNavItem.Product -> Text("Products Grid View")
-                BottomNavItem.Gallery ->  GalleryScreen(
-                // Pass real API list here if you have ViewModel/state, e.g.:
-                // apiImages = viewModel.galleryImagesList
-            )
+                BottomNavItem.Gallery -> GalleryScreen()
                 BottomNavItem.Contact -> ContactScreen()
                 BottomNavItem.About ->AboutUsScreen()
 

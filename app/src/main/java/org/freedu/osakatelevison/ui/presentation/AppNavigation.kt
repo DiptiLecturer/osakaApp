@@ -1,5 +1,6 @@
 package org.freedu.osakatelevison.ui.presentation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -91,6 +92,7 @@ fun OsakaBottomNavigationBar(onTabSelected: (BottomNavItem) -> Unit) {
     val indicatorColor = if (isDarkTheme) Color(0xFF451A1A) else OsakaRedLight
     Box(
         modifier = Modifier.fillMaxWidth().navigationBarsPadding()
+            .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Surface(
@@ -99,9 +101,10 @@ fun OsakaBottomNavigationBar(onTabSelected: (BottomNavItem) -> Unit) {
             shape = CircleShape,
             color = surfaceColor,
             modifier = Modifier.fillMaxWidth()
+                .background(Color.White)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp).background(Color.White)
             ) {
                 items.forEach { item ->
                     val isSelected = selectedItem == item

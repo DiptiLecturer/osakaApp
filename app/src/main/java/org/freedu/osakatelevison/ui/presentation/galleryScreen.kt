@@ -81,6 +81,7 @@ fun GalleryScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {

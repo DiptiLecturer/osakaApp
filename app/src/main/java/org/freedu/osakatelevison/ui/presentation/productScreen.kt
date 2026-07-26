@@ -65,6 +65,7 @@ fun ProductScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(paddingValues)
         ) {
             when (val state = uiState) {

@@ -59,7 +59,7 @@ fun MainAppScreen() {
 
             when (currentScreen) {
                 BottomNavItem.Home -> HomeScreen()
-                BottomNavItem.Product -> OsakaProductScreen()
+                BottomNavItem.Product -> ProductScreen()
                 BottomNavItem.Gallery -> GalleryScreen()
                 BottomNavItem.Contact -> ContactScreen()
                 BottomNavItem.About ->AboutUsScreen()

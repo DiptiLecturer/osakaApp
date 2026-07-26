@@ -1,406 +1,275 @@
 package org.freedu.osakatelevison.ui.presentation
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
+
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import android.widget.Toast
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import org.freedu.osakatelevison.R
+import org.freedu.osakatelevison.data.Product
+import org.freedu.osakatelevison.data.ProductUiState
+import org.freedu.osakatelevison.data.ProductViewModel
 import org.freedu.osakatelevison.ui.theme.*
-import androidx.core.net.toUri
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OsakaProductScreen() {
-    val context = LocalContext.current
-    val phoneNumber = "01886469096"
+fun ProductScreen(
+    viewModel: ProductViewModel = viewModel()
+) {
+    val isDark = isSystemInDarkTheme()
+    val bgColor = if (isDark) DarkBackground else LightBackground
+    val textColor = if (isDark) DarkForeground else LightForeground
 
-    // --- State Tracking ---
-    var selectedCategory by remember { mutableStateOf("Television") }
-    var selectedSize by remember { mutableStateOf("") }
-    var selectedSeries by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
 
-    // --- Main Category List ---
-    val categories = listOf("Television", "Fan", "Cooker", "More")
-
-    // --- TV Size -> Series/Model Data Matrix ---
-    val tvData = mapOf(
-        "24 inch" to listOf(
-            "All Models",
-            "Basic Frameless",
-            "Basic Double Glass",
-            "Smart Frameless",
-            "Smart Double Glass",
-            "Regular Series",
-            "Gold Series",
-            "Google TV"
-        ),
-        "32 inch" to listOf("All Models", "Regular Series", "Gold Series", "Google TV"),
-        "43 inch" to listOf("All Models", "Regular Series", "Gold Series", "Google TV"),
-        "50 inch" to listOf("All Models", "Regular Series", "Gold Series", "Google TV"),
-        "65 inch" to listOf("All Models", "Regular Series", "Gold Series", "Google TV")
-    )
-
-    // --- Fan Size -> Type Data Matrix ---
-    val fanData = mapOf(
-        "12 inch" to listOf("All Models", "Table Fan - Rechargeable"),
-        "16 inch" to listOf("All Models", "Table Fan - Rechargeable", "Stand Fan - Rechargeable"),
-        "18 inch" to listOf("All Models", "Stand Fan - Rechargeable")
-    )
-
-    // --- Resolve available sizes based on selected category ---
-    val availableSizes = when (selectedCategory) {
-        "Television" -> tvData.keys.toList()
-        "Fan" -> fanData.keys.toList()
-        else -> emptyList()
-    }
-
-    // Reset/default size whenever the main category changes
-    LaunchedEffect(selectedCategory) {
-        selectedSize = availableSizes.firstOrNull().orEmpty()
-    }
-
-    // --- Resolve available series/types based on selected size ---
-    val availableSeries = when (selectedCategory) {
-        "Television" -> tvData[selectedSize] ?: emptyList()
-        "Fan" -> fanData[selectedSize] ?: emptyList()
-        else -> emptyList()
-    }
-
-    // Reset/default series whenever the size changes
-    LaunchedEffect(selectedSize) {
-        selectedSeries = availableSeries.firstOrNull().orEmpty()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LightBackground)
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "OSAKA Catalog",
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = bgColor)
+            )
+        },
+        containerColor = bgColor
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(paddingValues)
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // --- Header Text ---
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Our ",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = LightForeground
-                )
-                Text(
-                    text = "Categories",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OsakaRed
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // --- Top Main Categories Row ---
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 2.dp)
-            ) {
-                items(categories) { category ->
-                    val isSelected = category == selectedCategory
-                    Box(
-                        modifier = Modifier
-                            .shadow(
-                                elevation = if (isSelected) 4.dp else 1.dp,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .background(
-                                color = if (isSelected) OsakaRed else Color.White,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .clickable { selectedCategory = category }
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = category,
-                            color = if (isSelected) Color.White else LightForeground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
+            when (val state = uiState) {
+                is ProductUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = OsakaRed)
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                is ProductUiState.Error -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = state.message, color = textColor)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { viewModel.fetchProducts() },
+                            colors = ButtonDefaults.buttonColors(containerColor = OsakaRed)
+                        ) {
+                            Icon(Icons.Outlined.Refresh, contentDescription = null)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Retry")
+                        }
+                    }
+                }
 
-            // --- Render content conditionally based on category ---
-            if (selectedCategory == "Television" || selectedCategory == "Fan") {
-
-                // --- PICK SIZE CARD ---
-                val sizeTitle = if (selectedCategory == "Television") "PICK TV SIZE" else "PICK FAN SIZE"
-                SelectionCardContainer(title = sizeTitle) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                is ProductUiState.Success -> {
+                    // 1. Search TextField
+                    OutlinedTextField(
+                        value = state.searchQuery,
+                        onValueChange = { viewModel.updateSearchQuery(it) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalFadingEdge(edgeWidth = 16.dp), // Subtle fade-out trick
-                        contentPadding = PaddingValues(horizontal = 14.dp) // Matches outer padding beautifully
-                    ) {
-                        items(availableSizes) { size ->
-                            val isSelected = size == selectedSize
-                            FilterCapsule(
-                                text = size,
-                                isSelected = isSelected,
-                                onClick = { selectedSize = size }
-                            )
-                        }
-                    }
-                }
+                            .padding(horizontal = 16.dp),
+                        placeholder = { Text("Search product name or size...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                // --- PICK SERIES / TYPE CARD ---
-                val seriesTitle = if (selectedCategory == "Television") "PICK TV SERIES" else "PICK FAN TYPE"
-                SelectionCardContainer(title = seriesTitle) {
+                    // 2. Horizontal Category Filter Chips Bar
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalFadingEdge(edgeWidth = 16.dp), // Subtle fade-out trick
-                        contentPadding = PaddingValues(horizontal = 14.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(availableSeries) { series ->
-                            val isSelected = series == selectedSeries
-                            FilterCapsule(
-                                text = series,
-                                isSelected = isSelected,
-                                onClick = { selectedSeries = series }
+                        items(state.categories) { category ->
+                            val isSelected = category == state.selectedCategory
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { viewModel.selectCategory(category) },
+                                label = {
+                                    Text(
+                                        text = category,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = OsakaRed,
+                                    selectedLabelColor = Color.White
+                                )
                             )
                         }
                     }
-                }
-            } else {
-                // --- COMING SOON CARD FOR COOKER & MORE ---
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                        .shadow(3.dp, RoundedCornerShape(20.dp))
-                        .background(Color.White, RoundedCornerShape(20.dp))
-                        .border(1.dp, LightBorder.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
-                        .padding(vertical = 40.dp, horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "📦",
-                            fontSize = 36.sp,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Text(
-                            text = "$selectedCategory Section Coming Soon!",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = LightMutedForeground,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = "We are currently updating our inventory.",
-                            fontSize = 12.sp,
-                            color = LightMutedForeground.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 3. Products Grid View
+                    if (state.products.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "No products found in this category.", color = Color.Gray)
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(state.products) { product ->
+                                ProductCard(product = product)
+                            }
+                        }
                     }
                 }
-            }
-        }
-
-        // --- FLOATING ACTION BUTTONS (FAB) ---
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 90.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // WhatsApp Button
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .shadow(3.dp, CircleShape)
-                    .background(WhatsappGreen, CircleShape)
-                    .clickable {
-                        // Convert local number (01886458285) to international format for wa.me
-                        val internationalNumber = "880" + phoneNumber.removePrefix("0")
-                        try {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                "https://wa.me/$internationalNumber".toUri()
-                            )
-                            context.startActivity(intent)
-                        } catch (e: ActivityNotFoundException) {
-                            Toast.makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "💬", color = Color.White, fontSize = 20.sp)
-            }
-
-            // Phone Call Button
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .shadow(3.dp, CircleShape)
-                    .background(Color.Black, CircleShape)
-                    .clickable {
-                        try {
-                            val intent = Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri())
-                            context.startActivity(intent)
-                        } catch (e: ActivityNotFoundException) {
-                            Toast.makeText(context, "No dialer app found", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Call,
-                    contentDescription = "Call Support",
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
             }
         }
     }
 }
 
-// --- REUSABLE CARD WRAPPER (PADDING ADJUSTED FOR CLIP-TO-PADDING UX) ---
 @Composable
-fun SelectionCardContainer(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Box(
+fun ProductCard(product: Product) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(3.dp, RoundedCornerShape(20.dp))
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .border(1.dp, LightBorder.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
-            .padding(vertical = 12.dp) // Removed horizontal padding here so content reaches edges smoothly
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp)
+            ) {
+                // AsyncImage with local fallback
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(product.imageUrl)
+                        .crossfade(true)
+                        .error(R.drawable.aboutosaka)
+                        .placeholder(R.drawable.aboutosaka)
+                        .build(),
+                    contentDescription = product.name,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+
+                // Promo / Discount Badge (e.g., "15% OFF", "NEW", "HOT")
+                val badgeText = product.discountPercentage ?: "NEW"
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(OsakaRed)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = badgeText,
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Product Name
             Text(
-                text = title,
-                fontSize = 12.sp,
+                text = product.name,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = LightMutedForeground,
-                letterSpacing = 0.5.sp,
-                modifier = Modifier.padding(horizontal = 14.dp) // Keeping title constrained
+                color = LightForeground,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.height(36.dp)
             )
-            content()
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Price Row with formatted numeric currency (BDT / ৳)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "MRP ",
+                    fontSize = 10.sp,
+                    color = OsakaRed,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "৳${product.price.toInt()}",
+                    fontSize = 14.sp,
+                    color = OsakaRed,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Explore Button
+            Button(
+                onClick = { /* Handle Navigate/Details */ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                Text(
+                    text = "EXPLORE NOW",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
-}
-
-// --- REUSABLE BADGE CAPSULE ---
-@Composable
-fun FilterCapsule(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .shadow(
-                elevation = if (isSelected) 2.dp else 0.dp,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .background(
-                color = if (isSelected) LightPrimary else LightSecondary,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .border(
-                width = 1.dp,
-                color = if (isSelected) LightPrimary else LightBorder,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = if (isSelected) LightPrimaryForeground else LightForeground,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-            fontSize = 13.sp
-        )
-    }
-}
-
-// --- CUSTOM MODIFIER FOR SUBTLE HORIZONTAL FADING EDGES ---
-fun Modifier.horizontalFadingEdge(edgeWidth: Dp): Modifier = this
-    .graphicsLayer(compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen)
-    .drawWithContent {
-        drawContent()
-        val edgeWidthPx = edgeWidth.toPx()
-        val width = size.width
-
-        // Left fading edge mask
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(Color.Transparent, Color.Black),
-                startX = 0f,
-                endX = edgeWidthPx
-            ),
-            blendMode = BlendMode.DstIn
-        )
-        // Right fading edge mask
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(Color.Black, Color.Transparent),
-                startX = width - edgeWidthPx,
-                endX = width
-            ),
-            blendMode = BlendMode.DstIn
-        )
-    }
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun OsakaProductScreenPreview() {
-    OsakaProductScreen()
 }

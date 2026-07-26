@@ -1,19 +1,8 @@
 package org.freedu.osakatelevison.ui.presentation
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -26,95 +15,161 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import kotlinx.coroutines.delay
+import org.freedu.osakatelevison.R
+import org.freedu.osakatelevison.data.HeroSlide
+import org.freedu.osakatelevison.data.HomeUiState
+import org.freedu.osakatelevison.data.HomeViewModel
 import org.freedu.osakatelevison.ui.theme.LightMutedForeground
 import org.freedu.osakatelevison.ui.theme.OsakaRed
 import kotlin.math.abs
-import kotlin.time.Duration.Companion.milliseconds
 
 @Preview(showSystemUi = true)
 @Composable
-
-fun HomeScreen() {
-    // Added rememberScrollState() and verticalScroll to make the screen scrollable
+fun HomeScreen(
+    viewModel: HomeViewModel = viewModel()
+) {
     val scrollState = rememberScrollState()
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-
-            .background(Color.White)
-            .verticalScroll(scrollState), // Allows scrolling past the carousel to see the grid
+        modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // 2. Carousel Section
+        // Carousel Section connected to Supabase ViewModel
         Spacer(Modifier.height(26.dp))
-        WebsiteCarousel()
 
-        // 3. Newly Arrived Section (Now safely inside the Column right below the carousel)
+        when (val state = uiState) {
+            is HomeUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = OsakaRed)
+                }
+            }
+
+            is HomeUiState.Error -> {
+                // Displays gracefully when offline or error occurs
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Failed to load hero slides", color = Color.Gray)
+                }
+            }
+
+            is HomeUiState.Success -> {
+                WebsiteCarousel(slides = state.heroSlides)
+            }
+        }
+
+        // Newly Arrived Section
         Spacer(Modifier.height(24.dp))
         NewlyArrivedSection()
     }
 }
 
-
 @Composable
-fun WebsiteCarousel() {
-// Updated with 2 TV images and 1 Fan image placeholder URLs
-    val images = listOf(
-        "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=800&auto=format&fit=crop", // TV 1
-        "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&auto=format&fit=crop", // TV 2
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop" // Electric Fan
-    )
+fun WebsiteCarousel(slides: List<HeroSlide>) {
+    if (slides.isEmpty()) return
 
-    val pagerState = rememberPagerState(pageCount = { images.size })
+    val pagerState = rememberPagerState(pageCount = { slides.size })
 
-/*    LaunchedEffect(key1 = true) {
-        while (true) {
-            delay(2000.milliseconds)
-            val nextPage = (pagerState.currentPage + 1) % images.size
-            pagerState.animateScrollToPage(nextPage)
-        }
-    }*/
+    // Auto-scroll loop every 3 seconds
+    LaunchedEffect(key1 = pagerState.currentPage) {
+        delay(3000)
+        val nextPage = (pagerState.currentPage + 1) % slides.size
+        pagerState.animateScrollToPage(
+            page = nextPage, animationSpec = tween(durationMillis = 600)
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth().height(120.dp)
+            modifier = Modifier.fillMaxWidth()
+                .height(180.dp) // Adjusted slightly for cleaner banner aspect ratio
+                .padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp))
         ) {
             HorizontalPager(
                 state = pagerState, modifier = Modifier.fillMaxSize()
             ) { page ->
+                val slide = slides[page]
                 val pageOffset =
                     ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
                 val absOffset = abs(pageOffset)
 
-                AsyncImage(
-                    model = images[page],
-                    contentDescription = "Carousel Image $page",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().graphicsLayer {
-                            // 1. Smooth Fade Effect: decrease opacity as it moves away from center
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current).data(slide.imageUrl)
+                            .crossfade(true).error(R.drawable.aboutosaka)
+                            .placeholder(R.drawable.aboutosaka).build(),
+                        contentDescription = slide.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().graphicsLayer {
                             alpha = 1f - absOffset.coerceIn(0f, 1f)
                             translationX = pageOffset * size.width
                         })
+
+                    // Text & Title Overlay
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent, Color.Black.copy(alpha = 0.7f)
+                                ), startY = 80f
+                            )
+                        )
+                    )
+
+                    Column(
+                        modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+                    ) {
+                        Text(
+                            text = slide.title,
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        slide.description?.let { desc ->
+                            Text(
+                                text = desc,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -126,7 +181,7 @@ fun WebsiteCarousel() {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(images.size) { iteration ->
+            repeat(slides.size) { iteration ->
                 val isSelected = pagerState.currentPage == iteration
 
                 Box(
@@ -142,9 +197,7 @@ fun WebsiteCarousel() {
 
 
 data class NewArrivalItem(
-    val title: String,
-    val price: String,
-    val imageUrl: String
+    val title: String, val price: String, val imageUrl: String
 )
 
 val FlashReleaseBg = Color(0xFFFFEAEA)
@@ -160,28 +213,23 @@ fun NewlyArrivedSection(modifier: Modifier = Modifier) {
             title = "Smart Frameless - 24\" Smart Android Frameless",
             price = "11,500 ৳",
             imageUrl = "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=500&auto=format&fit=crop" // TV 1
-        ),
-        NewArrivalItem(
+        ), NewArrivalItem(
             title = "Basic Double Glass - 24\" Basic Double Glass",
             price = "11,000 ৳",
             imageUrl = "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&auto=format&fit=crop" // TV 2
-        ),
-        NewArrivalItem(
+        ), NewArrivalItem(
             title = "Premium Stand Fan - High Speed Cooling",
             price = "4,500 ৳",
             imageUrl = "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&auto=format&fit=crop" // Fan 1
-        ),
-        NewArrivalItem(
+        ), NewArrivalItem(
             title = "Smart Frameless - 32\" Android LED",
             price = "18,500 ৳",
             imageUrl = "https://images.unsplash.com/photo-1560169897-fc0cdbdfa4d5?w=500&auto=format&fit=crop" // TV 3
-        ),
-        NewArrivalItem(
+        ), NewArrivalItem(
             title = "Vintage Table Fan - Metal Finish",
             price = "3,200 ৳",
             imageUrl = "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&auto=format&fit=crop" // Fan 2
-        ),
-        NewArrivalItem(
+        ), NewArrivalItem(
             title = "Basic Double Glass - 40\" Full HD TV",
             price = "24,000 ৳",
             imageUrl = "https://images.unsplash.com/photo-1560169897-fc0cdbdfa4d5?w=500&auto=format&fit=crop" // TV 4
@@ -195,8 +243,7 @@ fun NewlyArrivedSection(modifier: Modifier = Modifier) {
     ) {
         // 1. Badge Header
         Box(
-            modifier = Modifier.clip(RoundedCornerShape(50))
-                .background(FlashReleaseBg)
+            modifier = Modifier.clip(RoundedCornerShape(50)).background(FlashReleaseBg)
                 .padding(horizontal = 16.dp, vertical = 6.dp)
         ) {
             Text(
@@ -248,42 +295,31 @@ fun NewlyArrivedSection(modifier: Modifier = Modifier) {
 @Composable
 fun ProductCard(item: NewArrivalItem) {
     Card(
-        modifier = Modifier
-            .width(190.dp)
-            .wrapContentHeight(),
+        modifier = Modifier.width(190.dp).wrapContentHeight(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
+                modifier = Modifier.fillMaxWidth().height(130.dp)
             ) {
                 // Replaced placeholder Box with live AsyncImage
                 AsyncImage(
                     model = item.imageUrl,
                     contentDescription = item.title,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
+                    modifier = Modifier.fillMaxSize().padding(8.dp)
                 )
 
                 // "NEW" Red Badge
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(OsakaRed)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                    modifier = Modifier.align(Alignment.TopStart).clip(RoundedCornerShape(8.dp))
+                        .background(OsakaRed).padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "NEW",
@@ -316,10 +352,7 @@ fun ProductCard(item: NewArrivalItem) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "MRP ",
-                    fontSize = 10.sp,
-                    color = OsakaRed,
-                    fontWeight = FontWeight.Bold
+                    text = "MRP ", fontSize = 10.sp, color = OsakaRed, fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = item.price,

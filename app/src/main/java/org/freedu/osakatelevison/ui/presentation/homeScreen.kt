@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import org.freedu.osakatelevison.R
 import org.freedu.osakatelevison.data.HeroSlide
 import org.freedu.osakatelevison.data.HomeUiState
@@ -46,6 +48,7 @@ import org.freedu.osakatelevison.data.HomeViewModel
 import org.freedu.osakatelevison.ui.theme.LightMutedForeground
 import org.freedu.osakatelevison.ui.theme.OsakaRed
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.milliseconds
 
 @Preview(showSystemUi = true)
 @Composable
@@ -56,16 +59,20 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(scrollState),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Carousel Section connected to Supabase ViewModel
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(16.dp))
 
         when (val state = uiState) {
             is HomeUiState.Loading -> {
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = OsakaRed)
@@ -73,9 +80,10 @@ fun HomeScreen(
             }
 
             is HomeUiState.Error -> {
-                // Displays gracefully when offline or error occurs
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "Failed to load hero slides", color = Color.Gray)
@@ -87,7 +95,6 @@ fun HomeScreen(
             }
         }
 
-        // Newly Arrived Section
         Spacer(Modifier.height(24.dp))
         NewlyArrivedSection()
     }
@@ -99,56 +106,82 @@ fun WebsiteCarousel(slides: List<HeroSlide>) {
 
     val pagerState = rememberPagerState(pageCount = { slides.size })
 
-    // Auto-scroll loop every 3 seconds
-    LaunchedEffect(key1 = pagerState.currentPage) {
-        delay(3000)
-        val nextPage = (pagerState.currentPage + 1) % slides.size
-        pagerState.animateScrollToPage(
-            page = nextPage, animationSpec = tween(durationMillis = 600)
-        )
+    // Fixed Auto-scroll loop using settledPage snapshot
+    LaunchedEffect(Unit) {
+        snapshotFlow { pagerState.settledPage }.collectLatest { page ->
+            delay(1000.milliseconds)
+            val nextPage = (page + 1) % slides.size
+            pagerState.animateScrollToPage(
+                page = nextPage,
+                animationSpec = tween(durationMillis = 600)
+            )
+        }
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth()
-                .height(180.dp) // Adjusted slightly for cleaner banner aspect ratio
-                .padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp))
-        ) {
-            HorizontalPager(
-                state = pagerState, modifier = Modifier.fillMaxSize()
-            ) { page ->
-                val slide = slides[page]
-                val pageOffset =
-                    ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
-                val absOffset = abs(pageOffset)
+        // Content padding allows seeing previous & next cards on sides
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentPadding = PaddingValues(horizontal = 32.dp),
+            pageSpacing = 12.dp
+        ) { page ->
+            val slide = slides[page]
 
+            // Calculate scale factor for card pop-out effect
+            val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
+            val absOffset = abs(pageOffset).coerceIn(0f, 1f)
+            val scale = 1f - (absOffset * 0.12f) // Active card scales up to 100%, inactive down to 88%
+            val alpha = 1f - (absOffset * 0.3f)   // Mild dimming on inactive peek cards
+
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        this.alpha = alpha
+                    }
+            ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current).data(slide.imageUrl)
-                            .crossfade(true).error(R.drawable.aboutosaka)
-                            .placeholder(R.drawable.aboutosaka).build(),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(slide.imageUrl)
+                            .crossfade(true)
+                            .error(R.drawable.aboutosaka)
+                            .placeholder(R.drawable.aboutosaka)
+                            .build(),
                         contentDescription = slide.title,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize().graphicsLayer {
-                            alpha = 1f - absOffset.coerceIn(0f, 1f)
-                            translationX = pageOffset * size.width
-                        })
-
-                    // Text & Title Overlay
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent, Color.Black.copy(alpha = 0.7f)
-                                ), startY = 80f
-                            )
-                        )
+                        modifier = Modifier.fillMaxSize()
                     )
 
+                    // Gradient Overlay for Text Visibility
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.75f)
+                                    ),
+                                    startY = 60f
+                                )
+                            )
+                    )
+
+                    // Text correctly anchored to Bottom Left corner
                     Column(
-                        modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(16.dp)
                     ) {
                         Text(
                             text = slide.title,
@@ -173,29 +206,32 @@ fun WebsiteCarousel(slides: List<HeroSlide>) {
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        // Dot Indicators
+        // Animated Indicators (expanding pill for active card)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeat(slides.size) { iteration ->
                 val isSelected = pagerState.currentPage == iteration
+                val width = if (isSelected) 20.dp else 8.dp
 
                 Box(
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                        .size(if (isSelected) 10.dp else 8.dp).clip(CircleShape).background(
-                            color = if (isSelected) OsakaRed else LightMutedForeground.copy(alpha = 0.5f)
+                    modifier = Modifier
+                        .padding(horizontal = 3.dp)
+                        .height(8.dp)
+                        .width(width)
+                        .clip(CircleShape)
+                        .background(
+                            color = if (isSelected) OsakaRed else Color.Gray.copy(alpha = 0.4f)
                         )
                 )
             }
         }
     }
 }
-
-
 data class NewArrivalItem(
     val title: String, val price: String, val imageUrl: String
 )

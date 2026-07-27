@@ -54,102 +54,98 @@ fun GalleryScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedImageIndex by remember { mutableStateOf<Int?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bgColor)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        when (val state = uiState) {
+            is GalleryUiState.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = OsakaRed
+                )
+            }
+
+            is GalleryUiState.Error -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = state.message, color = textColor)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { viewModel.fetchGalleryImages() },
+                        colors = ButtonDefaults.buttonColors(containerColor = OsakaRed),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Retry", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
+            is GalleryUiState.Success -> {
+                val images = state.items
+
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Header Section at top of screen
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Collections,
                             contentDescription = null,
                             tint = OsakaRed,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Photo Gallery",
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = textColor
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = bgColor)
-            )
-        },
-        containerColor = bgColor
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-        ) {
-            when (val state = uiState) {
-                is GalleryUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = OsakaRed
+
+                    Text(
+                        text = "Showroom & Product Highlights",
+                        fontSize = 12.sp,
+                        color = mutedTextColor,
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
-                }
 
-                is GalleryUiState.Error -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    // Image Grid
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Text(text = state.message, color = textColor)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            onClick = { viewModel.fetchGalleryImages() },
-                            colors = ButtonDefaults.buttonColors(containerColor = OsakaRed)
-                        ) {
-                            Icon(Icons.Outlined.Refresh, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Retry")
-                        }
-                    }
-                }
-
-                is GalleryUiState.Success -> {
-                    val images = state.items
-
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Text(
-                            text = "Showroom & Product Highlights",
-                            fontSize = 14.sp,
-                            color = mutedTextColor,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(bottom = 24.dp),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            itemsIndexed(images) { index, item ->
-                                GalleryGridItem(
-                                    item = item,
-                                    cardBgColor = cardBgColor,
-                                    borderColor = borderColor,
-                                    textColor = textColor,
-                                    onClick = { selectedImageIndex = index }
-                                )
-                            }
-                        }
-                    }
-
-                    // Full Screen Dialog Preview
-                    selectedImageIndex?.let { index ->
-                        val currentItem = images.getOrNull(index)
-                        if (currentItem != null) {
-                            FullScreenImagePreview(
-                                item = currentItem,
-                                onDismiss = { selectedImageIndex = null }
+                        itemsIndexed(images) { index, item ->
+                            GalleryGridItem(
+                                item = item,
+                                cardBgColor = cardBgColor,
+                                borderColor = borderColor,
+                                textColor = textColor,
+                                onClick = { selectedImageIndex = index }
                             )
                         }
+                    }
+                }
+
+                // Full Screen Dialog Preview
+                selectedImageIndex?.let { index ->
+                    val currentItem = images.getOrNull(index)
+                    if (currentItem != null) {
+                        FullScreenImagePreview(
+                            item = currentItem,
+                            onDismiss = { selectedImageIndex = null }
+                        )
                     }
                 }
             }
@@ -169,10 +165,11 @@ private fun GalleryGridItem(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.85f)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = cardBgColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -198,11 +195,11 @@ private fun GalleryGridItem(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(10.dp)
+                        .padding(8.dp)
                 ) {
                     Text(
                         text = captionText,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor,
                         maxLines = 1
@@ -265,7 +262,7 @@ private fun FullScreenImagePreview(
                 Text(
                     text = captionText,
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)

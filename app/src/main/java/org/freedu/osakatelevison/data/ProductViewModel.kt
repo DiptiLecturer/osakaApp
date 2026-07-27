@@ -22,6 +22,7 @@ sealed interface ProductUiState {
     data class Error(val message: String) : ProductUiState
 }
 
+
 class ProductViewModel : ViewModel() {
 
     private val _allProducts = MutableStateFlow<List<Product>>(emptyList())
@@ -41,21 +42,41 @@ class ProductViewModel : ViewModel() {
             isLoading -> ProductUiState.Loading
             error != null -> ProductUiState.Error(error)
             else -> {
-                // Extract unique categories from backend
-                val categories = listOf("All") + products.map { it.category }.distinct().sorted()
+                // 1. Calculate dynamic counts based on loaded products
+                val totalCount = products.size
+                val fanCount = products.count { isFanProduct(it) }
+                val tvCount = products.count { isTvProduct(it) }
 
-                // Filter products based on selected category & search string
+                // 2. Format tab titles with dynamic counts
+                val categories = listOf(
+                    "All ($totalCount)",
+                    "Fan ($fanCount)",
+                    "TV ($tvCount)"
+                )
+
+                // 3. Filter products based on selected tab & search string
                 val filteredProducts = products.filter { product ->
-                    val matchesCategory = selectedCategory == "All" || product.category.equals(selectedCategory, ignoreCase = true)
+                    val matchesCategory = when {
+                        selectedCategory.startsWith("Fan") -> isFanProduct(product)
+                        selectedCategory.startsWith("TV") -> isTvProduct(product)
+                        else -> true // "All"
+                    }
+
                     val matchesSearch = product.name.contains(searchQuery, ignoreCase = true) ||
                             product.category.contains(searchQuery, ignoreCase = true)
+
                     matchesCategory && matchesSearch
                 }
+
+                // Match selected category properly if state updated
+                val activeCategory = categories.find {
+                    it.startsWith(selectedCategory.takeWhile { char -> char != ' ' && char != '(' })
+                } ?: categories.first()
 
                 ProductUiState.Success(
                     products = filteredProducts,
                     categories = categories,
-                    selectedCategory = selectedCategory,
+                    selectedCategory = activeCategory,
                     searchQuery = searchQuery
                 )
             }
@@ -66,12 +87,26 @@ class ProductViewModel : ViewModel() {
         fetchProducts()
     }
 
+    private fun isFanProduct(product: Product): Boolean {
+        val cat = product.category.lowercase()
+        val name = product.name.lowercase()
+        val size = product.size?.trim() ?: ""
+
+        return cat.contains("fan") ||
+                name.contains("fan") ||
+                size in listOf("12", "16", "18", "12\"", "16\"", "18\"") ||
+                listOf("12", "16", "18").any { name.contains(it) }
+    }
+
+    private fun isTvProduct(product: Product): Boolean {
+        return !isFanProduct(product)
+    }
+
     fun fetchProducts() {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                // Query Rule: Fetch rows where is_active = true and order by category ascending
                 val result = SupabaseProvider.client
                     .from("products")
                     .select {

@@ -63,7 +63,7 @@ fun ContactScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgColor)
+            .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Column(

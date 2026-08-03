@@ -41,7 +41,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun OsakaTelevisonTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     // Set to false by default so your custom brand colors take precedence over Android's dynamic wallpaper colors
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit

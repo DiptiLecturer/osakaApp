@@ -5,7 +5,19 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -13,9 +25,22 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Collections
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Storefront
+import androidx.compose.material.icons.outlined.SupportAgent
+import androidx.compose.material.icons.outlined.Tv
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,24 +53,35 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import org.freedu.osakatelevison.ui.theme.*
+import org.freedu.osakatelevison.ui.theme.DarkBackground
+import org.freedu.osakatelevison.ui.theme.DarkBorder
+import org.freedu.osakatelevison.ui.theme.DarkForeground
+import org.freedu.osakatelevison.ui.theme.DarkMutedForeground
+import org.freedu.osakatelevison.ui.theme.DarkSecondary
+import org.freedu.osakatelevison.ui.theme.LightBackground
+import org.freedu.osakatelevison.ui.theme.LightBorder
+import org.freedu.osakatelevison.ui.theme.LightForeground
+import org.freedu.osakatelevison.ui.theme.LightMutedForeground
+import org.freedu.osakatelevison.ui.theme.LightSecondary
+import org.freedu.osakatelevison.ui.theme.OsakaRed
+import org.freedu.osakatelevison.ui.theme.OsakaRedHover
+import org.freedu.osakatelevison.ui.theme.OsakaRedLight
+import org.freedu.osakatelevison.ui.theme.OsakaRedLightBg
+import org.freedu.osakatelevison.ui.theme.WhatsappGreen
 
 private data class NavGridItem(
-    val title: String,
-    val icon: ImageVector,
-    val route: String
+    val title: String, val icon: ImageVector, val route: String
 )
 
 private data class LocationItem(
-    val tag: String,
-    val address: String,
-    val phone: String
+    val tag: String, val address: String, val phone: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutUsScreen(
-    onNavigate: (String) -> Unit = {}
+    onNavigate: (String) -> Unit = {},
+
 ) {
     val isDark = isSystemInDarkTheme()
     val bgColor = if (isDark) DarkBackground else LightBackground
@@ -70,13 +106,11 @@ fun AboutUsScreen(
             tag = "Corporate Office",
             address = "মোহাম্মদপুর, কাদেরাবাদ হাউসিং, রোড ৫, ব্লক বি, বাসা ৪, গ্রাউন্ড ফ্লোর ।",
             phone = "01886469096"
-        ),
-        LocationItem(
+        ), LocationItem(
             tag = "Wholesale Center",
             address = "গুলিস্তান, কাপ্তান বাজার কম্পলেক্স - ভবন ২, ২য় তলা, দোকান ১০৫-১০৬, ঢাকা।",
             phone = "01934009834"
-        ),
-        LocationItem(
+        ), LocationItem(
             tag = "Sales Center",
             address = "এলিফ্যান্ট রোড, আইসিটি ভবন (সুভাসতু আর্কেড), লেভেল ৩, দোকান ৩০৮।",
             phone = "01401111245"
@@ -84,9 +118,7 @@ fun AboutUsScreen(
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(bgColor)
+        modifier = Modifier.fillMaxSize().background(Color.White)
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -185,8 +217,7 @@ fun AboutUsScreen(
                     cardBg = cardBg,
                     borderColor = borderColor,
                     textColor = textColor,
-                    onClick = { onNavigate(nav.route) }
-                )
+                    onClick = { onNavigate(nav.route) })
             }
 
             // --- SHOWROOMS & OFFICES HEADER (Full Width) ---
@@ -207,8 +238,7 @@ fun AboutUsScreen(
                     cardBg = cardBg,
                     borderColor = borderColor,
                     textColor = textColor,
-                    onCall = { dialPhone(context, location.phone) }
-                )
+                    onCall = { dialPhone(context, location.phone) })
             }
         }
     }
@@ -219,17 +249,13 @@ fun AboutUsScreen(
 @Composable
 private fun HeroHeaderSection() {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(OsakaRedLightBg)
-            .border(1.dp, OsakaRedLight, RoundedCornerShape(16.dp))
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+            .background(OsakaRedLightBg).border(1.dp, OsakaRedLight, RoundedCornerShape(16.dp))
             .padding(18.dp)
     ) {
         Column {
             Surface(
-                color = OsakaRed,
-                shape = RoundedCornerShape(6.dp)
+                color = OsakaRed, shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
                     text = "EST. 1994",
@@ -267,12 +293,8 @@ private fun SectionCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
-            .padding(16.dp)
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp)).padding(16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -298,53 +320,33 @@ private fun SectionCard(
 
 @Composable
 private fun GridStatTile(
-    number: String,
-    label: String,
-    cardBg: Color,
-    borderColor: Color,
-    mutedTextColor: Color
+    number: String, label: String, cardBg: Color, borderColor: Color, mutedTextColor: Color
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp)).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = number,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = OsakaRed
+            text = number, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = OsakaRed
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = mutedTextColor
+            text = label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = mutedTextColor
         )
     }
 }
 
 @Composable
 private fun NavigationGridTile(
-    item: NavGridItem,
-    cardBg: Color,
-    borderColor: Color,
-    textColor: Color,
-    onClick: () -> Unit
+    item: NavGridItem, cardBg: Color, borderColor: Color, textColor: Color, onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
         color = cardBg,
         shape = RoundedCornerShape(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+        modifier = Modifier.fillMaxWidth().border(1.dp, borderColor, RoundedCornerShape(14.dp))
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -352,10 +354,7 @@ private fun NavigationGridTile(
             horizontalAlignment = Alignment.Start
         ) {
             Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(OsakaRedLight),
+                modifier = Modifier.size(36.dp).clip(CircleShape).background(OsakaRedLight),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -393,19 +392,11 @@ private fun NavigationGridTile(
 
 @Composable
 private fun LocationCard(
-    location: LocationItem,
-    cardBg: Color,
-    borderColor: Color,
-    textColor: Color,
-    onCall: () -> Unit
+    location: LocationItem, cardBg: Color, borderColor: Color, textColor: Color, onCall: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
-            .padding(14.dp)
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp)).padding(14.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -413,8 +404,7 @@ private fun LocationCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                color = OsakaRedLight,
-                shape = RoundedCornerShape(6.dp)
+                color = OsakaRedLight, shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
                     text = location.tag,
@@ -427,10 +417,7 @@ private fun LocationCard(
 
             IconButton(
                 onClick = onCall,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(WhatsappGreen)
-                    .size(32.dp)
+                modifier = Modifier.clip(CircleShape).background(WhatsappGreen).size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Phone,

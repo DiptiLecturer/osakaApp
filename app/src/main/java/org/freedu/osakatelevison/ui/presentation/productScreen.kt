@@ -2,6 +2,7 @@ package org.freedu.osakatelevison.ui.presentation
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -79,15 +81,15 @@ fun ProductScreen(
     viewModel: ProductViewModel = viewModel(), onNavigateToDetails: ((Product) -> Unit)? = null
 ) {
     val isDark = isSystemInDarkTheme()
-    val bgColor = if (isDark) DarkBackground else LightBackground
-    val textColor = if (isDark) DarkForeground else LightForeground
+    val bgColor =  LightBackground
+    val textColor =  Color.Black
 
     val uiState by viewModel.uiState.collectAsState()
 
     var selectedProductForSheet by remember { mutableStateOf<Product?>(null) }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(bgColor)
+        modifier = Modifier.fillMaxSize().background(color = Color.White)
             .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
         Text(
@@ -174,10 +176,8 @@ fun ProductScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = OsakaRed,
                         unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                        focusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color(0xFFF8F8F8),
-                        unfocusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color(
-                            0xFFF8F8F8
-                        )
+                        focusedContainerColor =  Color(0xFFF8F8F8),
+                        unfocusedContainerColor =Color(0xFFF8F8F8)
                     )
                 )
 
@@ -237,9 +237,9 @@ fun ProductScreen(
 fun ProductCard(
     product: Product, isDark: Boolean = isSystemInDarkTheme(), onClick: () -> Unit
 ) {
-    val cardBg = if (isDark) Color(0xFF1E1E1E) else Color.White
-    val textColor = if (isDark) DarkForeground else LightForeground
-    val imageBg = if (isDark) Color(0xFF2A2A2A) else Color(0xFFF8F8F8)
+    val cardBg =  Color.White
+    val textColor = Color.Black
+    val imageBg = Color.White
 
     val sizeText = product.size.trim() ?: ""
     val isFan = sizeText in listOf("12", "16", "18", "12\"", "16\"", "18\"") || listOf(
@@ -261,8 +261,9 @@ fun ProductCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth().padding(8.dp).background(Color.White),
+            horizontalAlignment = Alignment.CenterHorizontally,
+
         ) {
             // Compressed Image Box
             Box(
@@ -344,8 +345,8 @@ fun ProductCard(
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDark) Color.White else Color.Black,
-                    contentColor = if (isDark) Color.Black else Color.White
+                    containerColor =  Color.Black,
+                    contentColor =   Color.White
                 ),
                 shape = RoundedCornerShape(6.dp),
                 modifier = Modifier.fillMaxWidth().height(30.dp),
@@ -366,8 +367,8 @@ fun ProductCard(
 fun ProductDetailBottomSheet(
     product: Product, isDark: Boolean, onDismiss: () -> Unit
 ) {
-    val sheetBg = if (isDark) Color(0xFF1E1E1E) else Color.White
-    val textColor = if (isDark) Color.White else Color.Black
+    val sheetBg =  Color.White
+    val textColor =  Color.Black
 
     // Forces the sheet to open expanded without requiring the user to drag up
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -381,7 +382,7 @@ fun ProductDetailBottomSheet(
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(16.dp))
-                    .background(if (isDark) Color(0xFF2A2A2A) else Color(0xFFF5F5F5)),
+                    .background( Color(0xFFF5F5F5)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -441,22 +442,27 @@ fun CompactCategoryBar(
         items(categories) { category ->
             val isSelected = category == selectedCategory
 
-            val containerColor = when {
-                isSelected -> OsakaRed
-                isDark -> Color(0xFF252525)
-                else -> Color(0xFFF0F0F0)
-            }
+            // Selected: Red background / Unselected: White background
+            val containerColor = if (isSelected) Color.Black else Color.White
 
-            val textColor = when {
-                isSelected -> Color.White
-                isDark -> DarkForeground.copy(alpha = 0.8f)
-                else -> LightForeground.copy(alpha = 0.8f)
-            }
+            // Selected: White text / Unselected: Black text
+            val textColor = if (isSelected) Color.White else Color.Black
 
             Box(
-                modifier = Modifier.height(32.dp).clip(RoundedCornerShape(8.dp))
-                .background(containerColor).clickable { onCategorySelected(category) }
-                .padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                modifier = Modifier
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(containerColor)
+                    // Border added so unselected white buttons are visible on white backgrounds
+                    .border(
+                        width = 1.dp,
+                        color = if (isSelected) Color.White else Color(0xFFE0E0E0),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clickable { onCategorySelected(category) }
+                    .padding(horizontal = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
                     text = category,
                     fontSize = 12.sp,
@@ -468,3 +474,4 @@ fun CompactCategoryBar(
         }
     }
 }
+

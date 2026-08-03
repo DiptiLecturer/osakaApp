@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -278,6 +279,8 @@ fun OsakaBottomNavigationBar(
         }
     }
 }*/
+
+
 @Composable
 fun OsakaBottomNavigationBar(
     currentScreen: BottomNavItem,
@@ -291,21 +294,24 @@ fun OsakaBottomNavigationBar(
         BottomNavItem.About
     )
 
-    val isDark = isSystemInDarkTheme()
-    val bgColor = if (isDark) Color(0xFF121212).copy(alpha = 0.95f) else Color.White.copy(alpha = 0.95f)
+    // Locked to crisp light theme colors
+    val bgColor = Color.White
+    val dividerColor = Color(0xFFEEEEEE)
+    val activeColor = OsakaRed
+    val inactiveColor = Color(0xFF666666)
 
     Surface(
         color = bgColor,
-        tonalElevation = 4.dp,
+        tonalElevation = 6.dp,
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
     ) {
         Column {
             HorizontalDivider(
-                Modifier,
+                modifier = Modifier.fillMaxWidth(),
                 thickness = 1.dp,
-                color = if (isDark) Color(0xFF282828) else Color(0xFFEEEEEE)
+                color = dividerColor
             )
             Row(
                 modifier = Modifier
@@ -316,8 +322,6 @@ fun OsakaBottomNavigationBar(
             ) {
                 items.forEach { item ->
                     val isSelected = currentScreen == item
-                    val activeColor = OsakaRed
-                    val inactiveColor = if (isDark) Color(0xFF888888) else Color(0xFF888888)
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -327,10 +331,10 @@ fun OsakaBottomNavigationBar(
                             .weight(1f)
                             .clickable { onTabSelected(item) }
                     ) {
-                        // Top active line indicator
+                        // Top active indicator bar
                         Box(
                             modifier = Modifier
-                                .width(24.dp)
+                                .width(28.dp)
                                 .height(3.dp)
                                 .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
                                 .background(if (isSelected) activeColor else Color.Transparent)
@@ -350,7 +354,7 @@ fun OsakaBottomNavigationBar(
                         Text(
                             text = item.title,
                             fontSize = 10.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) activeColor else inactiveColor
                         )
 

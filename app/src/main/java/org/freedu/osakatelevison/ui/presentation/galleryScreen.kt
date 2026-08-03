@@ -55,7 +55,7 @@ fun GalleryScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgColor)
+            .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         when (val state = uiState) {

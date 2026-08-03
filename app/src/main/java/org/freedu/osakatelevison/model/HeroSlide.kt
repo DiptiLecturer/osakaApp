@@ -1,5 +1,4 @@
-package org.freedu.osakatelevison.data
-
+package org.freedu.osakatelevison.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

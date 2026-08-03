@@ -1,7 +1,6 @@
 package org.freedu.osakatelevison.ui.presentation
 
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -22,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,9 +30,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.freedu.osakatelevison.R
-import org.freedu.osakatelevison.data.GalleryUiState
-import org.freedu.osakatelevison.data.GalleryViewModel
-import org.freedu.osakatelevison.data.SupabaseGalleryItem
+import org.freedu.osakatelevison.data.viewModel.GalleryUiState
+import org.freedu.osakatelevison.data.viewModel.GalleryViewModel
+import org.freedu.osakatelevison.model.SupabaseGalleryItem
 import org.freedu.osakatelevison.ui.theme.*
 
 

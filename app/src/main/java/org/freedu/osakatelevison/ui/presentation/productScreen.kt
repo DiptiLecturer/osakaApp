@@ -64,13 +64,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.freedu.osakatelevison.R
-import org.freedu.osakatelevison.data.Product
-import org.freedu.osakatelevison.data.ProductUiState
-import org.freedu.osakatelevison.data.ProductViewModel
+import org.freedu.osakatelevison.model.Product
+import org.freedu.osakatelevison.data.viewModel.ProductUiState
+import org.freedu.osakatelevison.data.viewModel.ProductViewModel
 import org.freedu.osakatelevison.ui.theme.DarkBackground
 import org.freedu.osakatelevison.ui.theme.DarkForeground
 import org.freedu.osakatelevison.ui.theme.LightBackground
 import org.freedu.osakatelevison.ui.theme.LightForeground
+import org.freedu.osakatelevison.ui.theme.OsakaRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

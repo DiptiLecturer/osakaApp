@@ -1,4 +1,4 @@
-package org.freedu.osakatelevison.data
+package org.freedu.osakatelevison.model
 
 
 

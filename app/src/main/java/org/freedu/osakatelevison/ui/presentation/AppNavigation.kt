@@ -1,5 +1,7 @@
 package org.freedu.osakatelevison.ui.presentation
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +23,12 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,12 +59,24 @@ sealed class BottomNavItem(val route: String, val title: String, val icon: Image
 @Composable
 fun MainAppScreen() {
     var currentScreen by remember { mutableStateOf<BottomNavItem>(BottomNavItem.Home) }
+    var showExitDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Intercept System Back Press
+    BackHandler {
+        if (currentScreen != BottomNavItem.Home) {
+            // Rule 1: If on any other tab (Product, Gallery, etc.), back takes user to Home tab first
+            currentScreen = BottomNavItem.Home
+        } else {
+            // Rule 2: If already on Home tab, show exit confirmation dialog
+            showExitDialog = true
+        }
+    }
 
     Scaffold(
         bottomBar = {
             OsakaBottomNavigationBar(
-                currentScreen = currentScreen, // Pass currentScreen state down
-                onTabSelected = { screen ->
+                currentScreen = currentScreen, onTabSelected = { screen ->
                     currentScreen = screen
                 })
         }) { paddingValues ->
@@ -65,7 +84,7 @@ fun MainAppScreen() {
             when (currentScreen) {
                 BottomNavItem.Home -> HomeScreen(
                     onNavigateToProducts = {
-                        currentScreen = BottomNavItem.Product // Switch screen to Product
+                        currentScreen = BottomNavItem.Product
                     })
 
                 BottomNavItem.Product -> ProductScreen()
@@ -82,6 +101,55 @@ fun MainAppScreen() {
             }
         }
     }
+
+    // Exit Confirmation Dialog
+    if (showExitDialog) {
+        ExitConfirmationDialog(onDismiss = { showExitDialog = false }, onConfirmExit = {
+            showExitDialog = false
+            // Finish Activity to exit app safely
+            (context as? Activity)?.finish()
+        })
+    }
+
+}
+
+@Composable
+fun ExitConfirmationDialog(
+    onDismiss: () -> Unit, onConfirmExit: () -> Unit
+) {
+    AlertDialog(
+        modifier = Modifier.background(Color.White).fillMaxWidth(),
+
+
+        onDismissRequest = onDismiss, title = {
+            Text(
+                text = "Exit App?",
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }, text = {
+            Text(
+                color = Color.Black,
+                text = "Are you sure you want to exit Osaka Television?",
+                fontSize = 14.sp
+            )
+        }, confirmButton = {
+            Button(
+                onClick = onConfirmExit,
+                colors = ButtonDefaults.buttonColors(containerColor = OsakaRed)
+            ) {
+                Text(
+                    color = Color.White, text = "Exit"
+                )
+            }
+        }, dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text(
+                    color = Color.Black, text = "Cancel"
+                )
+            }
+        })
 }/*
 @Composable
 fun OsakaBottomNavigationBar(

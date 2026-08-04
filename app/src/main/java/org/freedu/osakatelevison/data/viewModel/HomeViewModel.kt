@@ -44,7 +44,7 @@ class HomeViewModel(
             "TV" -> products.filter { !isFanProduct(it) }
             else -> products
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     val selectedHighlightTab: StateFlow<String> = _selectedHighlightTab.asStateFlow()
     val isHighlightsLoading: StateFlow<Boolean> = _isHighlightsLoading.asStateFlow()
@@ -66,15 +66,15 @@ class HomeViewModel(
             repository.getHeroSlides()
                 .onSuccess { slides ->
                     val elapsedTime = System.currentTimeMillis() - startTime
-                    val remainingDelay = 3000L - elapsedTime
-                    if (remainingDelay > 0) delay(remainingDelay)
+                    val remainingDelay = 1000L - elapsedTime
+                    if (remainingDelay > 0) delay(remainingDelay.milliseconds)
 
                     _heroSlidesState.value = HomeUiState.Success(slides)
                 }
                 .onFailure { exception ->
                     val elapsedTime = System.currentTimeMillis() - startTime
-                    val remainingDelay = 3000L - elapsedTime
-                    if (remainingDelay > 0) delay(remainingDelay)
+                    val remainingDelay = 1000L - elapsedTime
+                    if (remainingDelay > 0) delay(remainingDelay.milliseconds)
 
                     _heroSlidesState.value = HomeUiState.Error(
                         exception.localizedMessage ?: "Failed to load hero slides"
@@ -93,7 +93,7 @@ class HomeViewModel(
                 .onFailure { /* Optionally handle failure */ }
 
             val elapsedTime = System.currentTimeMillis() - startTime
-            val remainingDelay = 3000L - elapsedTime
+            val remainingDelay = 1000L - elapsedTime
             if (remainingDelay > 0) delay(remainingDelay.milliseconds)
 
             _isHighlightsLoading.value = false
@@ -107,7 +107,7 @@ class HomeViewModel(
     private fun isFanProduct(product: Product): Boolean {
         val cat = product.category.lowercase()
         val name = product.name.lowercase()
-        val size = product.size?.trim() ?: ""
+        val size = product.size.trim() ?: ""
         return cat.contains("fan") ||
                 name.contains("fan") ||
                 size in listOf("12", "16", "18", "12\"", "16\"", "18\"")

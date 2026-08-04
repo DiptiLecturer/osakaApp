@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,11 +28,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +60,10 @@ import org.freedu.osakatelevison.data.viewModel.HomeUiState
 import org.freedu.osakatelevison.data.viewModel.HomeViewModel
 import org.freedu.osakatelevison.model.HeroSlide
 import org.freedu.osakatelevison.model.Product
+import org.freedu.osakatelevison.ui.theme.LightForeground
 import org.freedu.osakatelevison.ui.theme.OsakaRed
+import org.freedu.osakatelevison.ui.theme.OsakaRedLight
+import org.freedu.osakatelevison.ui.theme.OsakaRedLightBg
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -147,7 +153,10 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
+
+        // 1. ADD GREETING HEADER HERE
+        GreetingHeader()
 
         // Hero Carousel State Handling
         when (val state = heroSlidesState) {
@@ -292,6 +301,48 @@ fun WebsiteCarousel(slides: List<HeroSlide>) {
                         )
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun GreetingHeader(
+    modifier: Modifier = Modifier,
+    userName: String = "Welcome!"
+) {
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val (greetingText, emoji) = remember(currentHour) {
+        when (currentHour) {
+            in 4..11 -> "Good Morning" to "☀️"
+            in 12..16 -> "Good Afternoon" to "🌤️"
+            in 17..21 -> "Good Evening" to "🌆"
+            else -> "Good Night" to "🌙"
+        }
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "$greetingText $emoji",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = LightForeground.copy(alpha = 0.7f)
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Discover Quality Products",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = LightForeground
+            )
         }
     }
 }

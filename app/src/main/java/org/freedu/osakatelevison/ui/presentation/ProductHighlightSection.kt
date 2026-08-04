@@ -46,7 +46,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.freedu.osakatelevison.R
 import org.freedu.osakatelevison.model.Product
-import org.freedu.osakatelevison.ui.theme.DarkPrimary
 import org.freedu.osakatelevison.ui.theme.OsakaRed
 
 
@@ -63,9 +62,7 @@ fun ProductHighlightsSection(
     val tabs = listOf("All", "Fan", "TV")
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFFAFAFA))
+        modifier = Modifier.fillMaxWidth().background(Color(0xFFFAFAFA))
             .padding(vertical = 20.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -84,11 +81,9 @@ fun ProductHighlightsSection(
             tabs.forEach { tab ->
                 val isSelected = tab == selectedTab
                 Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSelected) OsakaRed else Color(0xFFEEEEEE))
-                        .clickable { onTabSelected(tab) }
-                        .padding(horizontal = 18.dp, vertical = 6.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                    .background(if (isSelected) OsakaRed else Color(0xFFEEEEEE))
+                    .clickable { onTabSelected(tab) }.padding(horizontal = 18.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -131,9 +126,7 @@ fun ProductHighlightsSection(
                 products.take(6).forEach { product ->
                     Box(modifier = Modifier.weight(1f)) {
                         HighlightProductCard(
-                            product = product,
-                            onClick = { onProductClick(product) }
-                        )
+                            product = product, onClick = { onProductClick(product) })
                     }
                 }
             }
@@ -145,9 +138,7 @@ fun ProductHighlightsSection(
                 shape = RoundedCornerShape(10.dp),
                 border = BorderStroke(1.5.dp, OsakaRed),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = OsakaRed),
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .height(42.dp)
+                modifier = Modifier.fillMaxWidth(0.85f).height(42.dp)
             ) {
                 Text(
                     text = "VIEW ALL PRODUCTS",
@@ -168,72 +159,61 @@ fun ProductHighlightsSection(
 
 @Composable
 private fun HighlightProductCard(
-    product: Product,
-    onClick: () -> Unit
+    product: Product, onClick: () -> Unit
 ) {
     val sizeText = product.size.trim()
-    val isFan = sizeText in listOf("12", "16", "18", "12\"", "16\"", "18\"") ||
-            listOf("12", "16", "18").any { product.name.contains(it) }
+    val isFan = sizeText in listOf("12", "16", "18", "12\"", "16\"", "18\"") || listOf(
+        "12",
+        "16",
+        "18"
+    ).any { product.name.contains(it) }
 
     val categoryTag = if (isFan) "FAN" else "TV"
     val categoryIcon = if (isFan) Icons.Default.Air else Icons.Default.Tv
     val tagBgColor = if (isFan) Color(0xFF2E7D32) else Color(0xFF1976D2)
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Image Box
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFFF8F8F8))
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(product.imageUrl)
-                        .crossfade(true)
-                        .error(R.drawable.aboutosaka)
-                        .placeholder(R.drawable.aboutosaka)
-                        .build(),
+                    model = ImageRequest.Builder(LocalContext.current).data(product.imageUrl)
+                        .crossfade(true).error(R.drawable.aboutosaka)
+                        .placeholder(R.drawable.aboutosaka).build(),
                     contentDescription = product.name,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(6.dp)
+                    modifier = Modifier.fillMaxSize().padding(6.dp)
                 )
 
+                // Category Tag
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .align(Alignment.TopStart)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(tagBgColor)
+                    modifier = Modifier.padding(6.dp).align(Alignment.TopStart)
+                        .clip(RoundedCornerShape(4.dp)).background(tagBgColor)
                         .padding(horizontal = 5.dp, vertical = 2.dp)
                 ) {
                     Icon(
                         imageVector = categoryIcon,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(10.dp)
+                        modifier = Modifier.width(37.dp).height(27.dp)
                     )
                     Text(
                         text = categoryTag,
                         color = Color.White,
-                        fontSize = 8.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -241,11 +221,12 @@ private fun HighlightProductCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Title
             Text(
+                color = Color.Black,
                 text = product.name,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = DarkPrimary,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -255,8 +236,14 @@ private fun HighlightProductCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // MRP Row
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "MRP ", fontSize = 9.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+                Text(
+                    text = "MRP ",
+                    fontSize = 9.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
                 Text(
                     text = "৳${product.price.toInt()}",
                     fontSize = 13.sp,
@@ -267,13 +254,12 @@ private fun HighlightProductCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Explore Button
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 shape = RoundedCornerShape(6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(30.dp),
+                modifier = Modifier.fillMaxWidth().height(30.dp),
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
@@ -286,3 +272,35 @@ private fun HighlightProductCard(
         }
     }
 }
+
+
+////@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//private fun HighlightProductCardPreview() {
+//
+//        // 1. Create a complete mock product for previewing
+//        val dummyProduct = Product(
+//            id = "1",
+//            name = "Basic Frameless - 32\" Smart Android Voice",
+//            price = 10500.0,
+//            originalPrice = 12500.0,
+//            discountPercentage = "16",
+//            imageUrl = "", // Blank or sample image URL
+//            category = "TV",
+//            size = "32\"",
+//            description = "High-definition smart television.",
+//            isActive = true,
+//            createdAt = "2026-01-01"
+//        )
+//
+//        // 2. Pass the dummy product and an empty click lambda
+//        HighlightProductCard(
+//            product = dummyProduct,
+//            onClick = {}
+//        )
+//
+//
+//}
+//
+//
+//

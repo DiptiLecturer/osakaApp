@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import org.freedu.osakatelevison.data.Repositories.ProductRepository
 import org.freedu.osakatelevison.data.Repositories.ProductRepositoryImpl
 import org.freedu.osakatelevison.model.Product
+import kotlin.time.Duration.Companion.milliseconds
 
 
 sealed interface ProductUiState {
@@ -78,7 +79,7 @@ class ProductViewModel(
                 )
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ProductUiState.Loading)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), ProductUiState.Loading)
 
     init {
         fetchProducts()
@@ -99,10 +100,10 @@ class ProductViewModel(
 
             // Guarantee minimum 3-second shimmer display time
             val elapsedTime = System.currentTimeMillis() - startTime
-            val remainingDelay = 3000L - elapsedTime
+            val remainingDelay = 1500L - elapsedTime
 
             if (remainingDelay > 0) {
-                delay(remainingDelay)
+                delay(remainingDelay.milliseconds)
             }
 
             _isLoading.value = false

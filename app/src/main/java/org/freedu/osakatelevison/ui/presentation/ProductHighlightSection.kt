@@ -1,4 +1,4 @@
-package org.freedu.osakatelevison.data
+package org.freedu.osakatelevison.ui.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,13 +22,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -51,6 +50,7 @@ import org.freedu.osakatelevison.ui.theme.DarkPrimary
 import org.freedu.osakatelevison.ui.theme.OsakaRed
 
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProductHighlightsSection(
     products: List<Product>,
@@ -58,7 +58,7 @@ fun ProductHighlightsSection(
     selectedTab: String,
     onTabSelected: (String) -> Unit,
     onProductClick: (Product) -> Unit,
-    onViewAllClick: () -> Unit // Callback to navigate to all products
+    onViewAllClick: () -> Unit
 ) {
     val tabs = listOf("All", "Fan", "TV")
 
@@ -77,7 +77,6 @@ fun ProductHighlightsSection(
             modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
         )
 
-        // 3. Compact Filter Bar
         Row(
             modifier = Modifier.padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -102,15 +101,18 @@ fun ProductHighlightsSection(
             }
         }
 
-        // 4. Products Grid / Loading
         if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentAlignment = Alignment.Center
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                maxItemsInEachRow = 2
             ) {
-                CircularProgressIndicator(color = OsakaRed, modifier = Modifier.size(32.dp))
+                repeat(4) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        ProductCardShimmer()
+                    }
+                }
             }
         } else if (products.isEmpty()) {
             Text(
@@ -120,7 +122,6 @@ fun ProductHighlightsSection(
                 modifier = Modifier.padding(vertical = 32.dp)
             )
         } else {
-            // 2-Column Responsive Flow Grid for homepage
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -139,7 +140,6 @@ fun ProductHighlightsSection(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 5. "View All Products" Button
             OutlinedButton(
                 onClick = onViewAllClick,
                 shape = RoundedCornerShape(10.dp),
@@ -193,7 +193,6 @@ private fun HighlightProductCard(
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Image Box
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -215,7 +214,6 @@ private fun HighlightProductCard(
                         .padding(6.dp)
                 )
 
-                // Category Tag
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -243,7 +241,6 @@ private fun HighlightProductCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Title
             Text(
                 text = product.name,
                 fontSize = 12.sp,
@@ -258,7 +255,6 @@ private fun HighlightProductCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // MRP Row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "MRP ", fontSize = 9.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
                 Text(
@@ -271,7 +267,6 @@ private fun HighlightProductCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Explore Button
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),

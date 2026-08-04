@@ -13,6 +13,8 @@ import org.freedu.osakatelevison.data.Repositories.HomeRepository
 import org.freedu.osakatelevison.data.Repositories.HomeRepositoryImpl
 import org.freedu.osakatelevison.model.HeroSlide
 import org.freedu.osakatelevison.model.Product
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 
 sealed interface HomeUiState {
@@ -20,7 +22,6 @@ sealed interface HomeUiState {
     data class Success(val heroSlides: List<HeroSlide>) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
-
 
 class HomeViewModel(
     private val repository: HomeRepository = HomeRepositoryImpl()
@@ -60,9 +61,21 @@ class HomeViewModel(
     private fun fetchHeroSlides() {
         viewModelScope.launch {
             _heroSlidesState.value = HomeUiState.Loading
+            val startTime = System.currentTimeMillis()
+
             repository.getHeroSlides()
-                .onSuccess { slides -> _heroSlidesState.value = HomeUiState.Success(slides) }
+                .onSuccess { slides ->
+                    val elapsedTime = System.currentTimeMillis() - startTime
+                    val remainingDelay = 3000L - elapsedTime
+                    if (remainingDelay > 0) delay(remainingDelay)
+
+                    _heroSlidesState.value = HomeUiState.Success(slides)
+                }
                 .onFailure { exception ->
+                    val elapsedTime = System.currentTimeMillis() - startTime
+                    val remainingDelay = 3000L - elapsedTime
+                    if (remainingDelay > 0) delay(remainingDelay)
+
                     _heroSlidesState.value = HomeUiState.Error(
                         exception.localizedMessage ?: "Failed to load hero slides"
                     )
@@ -73,9 +86,16 @@ class HomeViewModel(
     private fun fetchHighlights() {
         viewModelScope.launch {
             _isHighlightsLoading.value = true
+            val startTime = System.currentTimeMillis()
+
             repository.getHighlightProducts()
                 .onSuccess { products -> _highlightProducts.value = products }
                 .onFailure { /* Optionally handle failure */ }
+
+            val elapsedTime = System.currentTimeMillis() - startTime
+            val remainingDelay = 3000L - elapsedTime
+            if (remainingDelay > 0) delay(remainingDelay.milliseconds)
+
             _isHighlightsLoading.value = false
         }
     }

@@ -34,14 +34,14 @@ import androidx.core.net.toUri
 @Composable
 fun ContactScreen() {
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+
 
     // Dynamic color picks based on palette
-    val bgColor = if (isDark) DarkBackground else LightBackground
-    val textColor = if (isDark) DarkForeground else LightForeground
-    val mutedTextColor = if (isDark) DarkMutedForeground else LightMutedForeground
-    val cardBgColor = if (isDark) DarkSecondary else LightSecondary
-    val borderColor = if (isDark) DarkBorder else LightBorder
+    val bgColor =  LightBackground
+    val textColor = LightForeground
+    val mutedTextColor =  LightMutedForeground
+    val cardBgColor =  LightSecondary
+    val borderColor =  LightBorder
 
     // Helper action handlers
     fun makePhoneCall(rawPhone: String) {
@@ -70,36 +70,19 @@ fun ContactScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // Screen Title Header
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Call,
-                    contentDescription = null,
-                    tint = OsakaRed,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Contact Us",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor
-                )
-            }
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
 
-            // Header Banner
+        ) {
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 color = OsakaRedLightBg
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Get In Touch",

@@ -1,10 +1,12 @@
 package org.freedu.osakatelevison.ui.presentation
 
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -49,15 +52,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import org.freedu.osakatelevison.ui.theme.DarkBackground
-import org.freedu.osakatelevison.ui.theme.DarkBorder
-import org.freedu.osakatelevison.ui.theme.DarkForeground
-import org.freedu.osakatelevison.ui.theme.DarkMutedForeground
-import org.freedu.osakatelevison.ui.theme.DarkSecondary
 import org.freedu.osakatelevison.ui.theme.LightBackground
 import org.freedu.osakatelevison.ui.theme.LightBorder
 import org.freedu.osakatelevison.ui.theme.LightForeground
@@ -77,27 +76,26 @@ private data class LocationItem(
     val tag: String, val address: String, val phone: String
 )
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutUsScreen(
-    onNavigate: (String) -> Unit = {},
-
+    onNavigate: (String) -> Unit = {}
 ) {
-    val isDark = isSystemInDarkTheme()
-    val bgColor = if (isDark) DarkBackground else LightBackground
-    val cardBg = if (isDark) DarkSecondary else LightSecondary
-    val textColor = if (isDark) DarkForeground else LightForeground
-    val mutedTextColor = if (isDark) DarkMutedForeground else LightMutedForeground
-    val borderColor = if (isDark) DarkBorder else LightBorder
+    val cardBg = LightSecondary
+    val textColor = LightForeground
+    val mutedTextColor = LightMutedForeground
+    val borderColor = LightBorder
 
     val context = LocalContext.current
+    val gridState = rememberLazyGridState()
+    val coroutineScope = rememberCoroutineScope()
 
+    // 1. Updated Nav items (Removed Showroom & Our Legacy)
     val navItems = listOf(
-        NavGridItem("Showroom", Icons.Outlined.Storefront, "digital_showroom"),
-        NavGridItem("Our Legacy", Icons.Outlined.History, "our_legacy"),
         NavGridItem("Products", Icons.Outlined.Tv, "all_products"),
         NavGridItem("Gallery", Icons.Outlined.Collections, "visual_gallery"),
-        NavGridItem("Locations", Icons.Outlined.Place, "showrooms"),
+        NavGridItem("Locations", Icons.Outlined.Place, "scroll_to_locations"),
         NavGridItem("Contact Us", Icons.Outlined.SupportAgent, "get_in_touch")
     )
 
@@ -106,55 +104,42 @@ fun AboutUsScreen(
             tag = "Corporate Office",
             address = "মোহাম্মদপুর, কাদেরাবাদ হাউসিং, রোড ৫, ব্লক বি, বাসা ৪, গ্রাউন্ড ফ্লোর ।",
             phone = "01886469096"
-        ), LocationItem(
+        ),
+        LocationItem(
             tag = "Wholesale Center",
             address = "গুলিস্তান, কাপ্তান বাজার কম্পলেক্স - ভবন ২, ২য় তলা, দোকান ১০৫-১০৬, ঢাকা।",
             phone = "01934009834"
-        ), LocationItem(
+        ),
+        LocationItem(
             tag = "Sales Center",
             address = "এলিফ্যান্ট রোড, আইসিটি ভবন (সুভাসতু আর্কেড), লেভেল ৩, দোকান ৩০৮।",
             phone = "01401111245"
         )
     )
 
+    // Index of the "Our Locations" section header inside LazyVerticalGrid
+    val locationsSectionIndex = 7
+
     Box(
-        modifier = Modifier.fillMaxSize().background(Color.White)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
         LazyVerticalGrid(
+            state = gridState,
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // --- TOP HEADER (Full Width) ---
-            item(span = { GridItemSpan(2) }) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = OsakaRed,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "About Osaka Group",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                }
-            }
 
-            // --- HERO BANNER (Full Width) ---
+            // Index 0: HERO BANNER (Full Width)
             item(span = { GridItemSpan(2) }) {
                 HeroHeaderSection()
             }
 
-            // --- OUR STORY (Full Width) ---
+            // Index 1: OUR STORY (Full Width & Centered)
             item(span = { GridItemSpan(2) }) {
                 SectionCard(
                     title = "Our Story",
@@ -167,19 +152,21 @@ fun AboutUsScreen(
                         text = "Since 1994, Osaka Group has been a leader in high-end manufacturing with over 2 million televisions sold across Bangladesh.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = textColor,
-                        lineHeight = 22.sp
+                        lineHeight = 22.sp,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "We engineer premium, durable electronics designed specifically to elevate the everyday living experience.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = mutedTextColor,
-                        lineHeight = 20.sp
+                        lineHeight = 20.sp,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
-            // --- STATS BADGES (2 Columns) ---
+            // Index 2 & 3: STATS BADGES (2 Columns)
             item {
                 GridStatTile(
                     number = "32+",
@@ -199,7 +186,7 @@ fun AboutUsScreen(
                 )
             }
 
-            // --- QUICK NAVIGATION HEADER (Full Width) ---
+            // Index 4: QUICK NAVIGATION HEADER (Full Width)
             item(span = { GridItemSpan(2) }) {
                 Text(
                     text = "Quick Navigation",
@@ -210,17 +197,26 @@ fun AboutUsScreen(
                 )
             }
 
-            // --- QUICK NAVIGATION TILES (2 Columns) ---
+            // Index 5 & 6: QUICK NAVIGATION TILES (2 Columns - 4 Items)
             items(navItems) { nav ->
                 NavigationGridTile(
                     item = nav,
                     cardBg = cardBg,
                     borderColor = borderColor,
                     textColor = textColor,
-                    onClick = { onNavigate(nav.route) })
+                    onClick = {
+                        if (nav.route == "scroll_to_locations") {
+                            coroutineScope.launch {
+                                gridState.animateScrollToItem(locationsSectionIndex)
+                            }
+                        } else {
+                            onNavigate(nav.route) // Triggers navigation callback
+                        }
+                    }
+                )
             }
 
-            // --- SHOWROOMS & OFFICES HEADER (Full Width) ---
+            // Index 7: SHOWROOMS & OFFICES HEADER (Full Width)
             item(span = { GridItemSpan(2) }) {
                 Text(
                     text = "Our Locations",
@@ -231,14 +227,15 @@ fun AboutUsScreen(
                 )
             }
 
-            // --- LOCATION CARDS (Full Width) ---
+            // Index 8+: LOCATION CARDS (Full Width)
             items(locations, span = { GridItemSpan(2) }) { location ->
                 LocationCard(
                     location = location,
                     cardBg = cardBg,
                     borderColor = borderColor,
                     textColor = textColor,
-                    onCall = { dialPhone(context, location.phone) })
+                    onCall = { dialPhone(context, location.phone) }
+                )
             }
         }
     }
@@ -249,35 +246,52 @@ fun AboutUsScreen(
 @Composable
 private fun HeroHeaderSection() {
     Box(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-            .background(OsakaRedLightBg).border(1.dp, OsakaRedLight, RoundedCornerShape(16.dp))
-            .padding(18.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(OsakaRedLightBg)
+            .border(1.dp, OsakaRedLight, RoundedCornerShape(16.dp))
+            .padding(vertical = 20.dp, horizontal = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Surface(
-                color = OsakaRed, shape = RoundedCornerShape(6.dp)
+                color = OsakaRed,
+                shape = RoundedCornerShape(20.dp),
             ) {
                 Text(
                     text = "EST. 1994",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    fontSize = 10.sp,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                 )
             }
+
             Spacer(modifier = Modifier.height(10.dp))
+
             Text(
                 text = "OSAKA GROUP",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
-                color = OsakaRed
+                color = OsakaRed,
+                letterSpacing = 0.5.sp,
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(2.dp))
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             Text(
                 text = "32 Years of Innovation | Two Million Stories of Trust",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = LightForeground.copy(alpha = 0.85f)
+                color = LightForeground.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center,
+                lineHeight = 16.sp
             )
         }
     }
@@ -293,12 +307,18 @@ private fun SectionCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp)).padding(16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = icon,
@@ -306,11 +326,13 @@ private fun SectionCard(
                 tint = OsakaRed,
                 modifier = Modifier.size(20.dp)
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = textColor
+                color = textColor,
+                textAlign = TextAlign.Center
             )
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -320,33 +342,53 @@ private fun SectionCard(
 
 @Composable
 private fun GridStatTile(
-    number: String, label: String, cardBg: Color, borderColor: Color, mutedTextColor: Color
+    number: String,
+    label: String,
+    cardBg: Color,
+    borderColor: Color,
+    mutedTextColor: Color
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp)).padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = number, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = OsakaRed
+            text = number,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = OsakaRed
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = mutedTextColor
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = mutedTextColor
         )
     }
 }
 
 @Composable
 private fun NavigationGridTile(
-    item: NavGridItem, cardBg: Color, borderColor: Color, textColor: Color, onClick: () -> Unit
+    item: NavGridItem,
+    cardBg: Color,
+    borderColor: Color,
+    textColor: Color,
+    onClick: () -> Unit // Click callback
 ) {
     Surface(
-        onClick = onClick,
+        onClick = onClick, // Enables ripple effect and click navigation
         color = cardBg,
         shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth().border(1.dp, borderColor, RoundedCornerShape(14.dp))
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -354,12 +396,15 @@ private fun NavigationGridTile(
             horizontalAlignment = Alignment.Start
         ) {
             Box(
-                modifier = Modifier.size(36.dp).clip(CircleShape).background(OsakaRedLight),
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(OsakaRedLight),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = item.icon,
-                    contentDescription = null,
+                    contentDescription = item.title,
                     tint = OsakaRed,
                     modifier = Modifier.size(20.dp)
                 )
@@ -389,14 +434,21 @@ private fun NavigationGridTile(
         }
     }
 }
-
 @Composable
 private fun LocationCard(
-    location: LocationItem, cardBg: Color, borderColor: Color, textColor: Color, onCall: () -> Unit
+    location: LocationItem,
+    cardBg: Color,
+    borderColor: Color,
+    textColor: Color,
+    onCall: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cardBg)
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp)).padding(14.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .padding(14.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -404,7 +456,8 @@ private fun LocationCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                color = OsakaRedLight, shape = RoundedCornerShape(6.dp)
+                color = OsakaRedLight,
+                shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
                     text = location.tag,
@@ -417,7 +470,10 @@ private fun LocationCard(
 
             IconButton(
                 onClick = onCall,
-                modifier = Modifier.clip(CircleShape).background(WhatsappGreen).size(32.dp)
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(WhatsappGreen)
+                    .size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Phone,

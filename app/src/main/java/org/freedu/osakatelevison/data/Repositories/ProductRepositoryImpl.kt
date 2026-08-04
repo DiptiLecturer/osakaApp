@@ -9,9 +9,7 @@ import kotlinx.coroutines.withContext
 import org.freedu.osakatelevison.model.Product
 import org.freedu.osakatelevison.data.SupabaseProvider
 
-/**
- * Contract for fetching and mutating product data.
- */
+
 interface ProductRepository {
     suspend fun getActiveProducts(): Result<List<Product>>
     suspend fun getProductById(id: String): Result<Product?>

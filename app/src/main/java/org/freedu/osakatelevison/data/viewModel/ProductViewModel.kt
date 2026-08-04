@@ -2,6 +2,7 @@ package org.freedu.osakatelevison.data.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +13,7 @@ import org.freedu.osakatelevison.data.Repositories.ProductRepository
 import org.freedu.osakatelevison.data.Repositories.ProductRepositoryImpl
 import org.freedu.osakatelevison.model.Product
 
+
 sealed interface ProductUiState {
     object Loading : ProductUiState
     data class Success(
@@ -20,9 +22,9 @@ sealed interface ProductUiState {
         val selectedCategory: String,
         val searchQuery: String
     ) : ProductUiState
+
     data class Error(val message: String) : ProductUiState
 }
-
 
 class ProductViewModel(
     private val repository: ProductRepository = ProductRepositoryImpl()
@@ -35,11 +37,7 @@ class ProductViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<ProductUiState> = combine(
-        _allProducts,
-        _selectedCategory,
-        _searchQuery,
-        _isLoading,
-        _errorMessage
+        _allProducts, _selectedCategory, _searchQuery, _isLoading, _errorMessage
     ) { products, selectedCategory, searchQuery, isLoading, error ->
         when {
             isLoading -> ProductUiState.Loading
@@ -50,9 +48,7 @@ class ProductViewModel(
                 val tvCount = products.count { isTvProduct(it) }
 
                 val categories = listOf(
-                    "All ($totalCount)",
-                    "Fan ($fanCount)",
-                    "TV ($tvCount)"
+                    "All ($totalCount)", "Fan ($fanCount)", "TV ($tvCount)"
                 )
 
                 val filteredProducts = products.filter { product ->
@@ -62,8 +58,10 @@ class ProductViewModel(
                         else -> true
                     }
 
-                    val matchesSearch = product.name.contains(searchQuery, ignoreCase = true) ||
-                            product.category.contains(searchQuery, ignoreCase = true)
+                    val matchesSearch = product.name.contains(
+                        searchQuery,
+                        ignoreCase = true
+                    ) || product.category.contains(searchQuery, ignoreCase = true)
 
                     matchesCategory && matchesSearch
                 }
@@ -91,13 +89,21 @@ class ProductViewModel(
             _isLoading.value = true
             _errorMessage.value = null
 
-            repository.getActiveProducts()
-                .onSuccess { result ->
+            val startTime = System.currentTimeMillis()
+
+            repository.getActiveProducts().onSuccess { result ->
                     _allProducts.value = result
-                }
-                .onFailure { exception ->
+                }.onFailure { exception ->
                     _errorMessage.value = exception.localizedMessage ?: "Failed to load products"
                 }
+
+            // Guarantee minimum 3-second shimmer display time
+            val elapsedTime = System.currentTimeMillis() - startTime
+            val remainingDelay = 3000L - elapsedTime
+
+            if (remainingDelay > 0) {
+                delay(remainingDelay)
+            }
 
             _isLoading.value = false
         }
@@ -108,10 +114,14 @@ class ProductViewModel(
         val name = product.name.lowercase()
         val size = product.size.trim()
 
-        return cat.contains("fan") ||
-                name.contains("fan") ||
-                size in listOf("12", "16", "18", "12\"", "16\"", "18\"") ||
-                listOf("12", "16", "18").any { name.contains(it) }
+        return cat.contains("fan") || name.contains("fan") || size in listOf(
+            "12",
+            "16",
+            "18",
+            "12\"",
+            "16\"",
+            "18\""
+        ) || listOf("12", "16", "18").any { name.contains(it) }
     }
 
     private fun isTvProduct(product: Product): Boolean {

@@ -1,6 +1,12 @@
 package org.freedu.osakatelevison.ui.presentation
 
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,13 +41,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -52,28 +58,148 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.freedu.osakatelevison.R
-import org.freedu.osakatelevison.model.Product
 import org.freedu.osakatelevison.data.viewModel.ProductUiState
 import org.freedu.osakatelevison.data.viewModel.ProductViewModel
-import org.freedu.osakatelevison.ui.theme.DarkBackground
-import org.freedu.osakatelevison.ui.theme.DarkForeground
-import org.freedu.osakatelevison.ui.theme.LightBackground
-import org.freedu.osakatelevison.ui.theme.LightForeground
+import org.freedu.osakatelevison.model.Product
 import org.freedu.osakatelevison.ui.theme.OsakaRed
+import org.freedu.osakatelevison.ui.theme.OsakaRedHover
+import org.freedu.osakatelevison.ui.theme.OsakaRedLightBg
+
+// 1. Shimmer Extension Modifier
+fun Modifier.productShimmerEffect(): Modifier = composed {
+    val transition = rememberInfiniteTransition(label = "productShimmerTransition")
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f, targetValue = 1000f, animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "productShimmerAnimation"
+    )
+
+    val shimmerColors = listOf(
+        Color(0xFFEBEBEB), Color(0xFFF5F5F5), Color(0xFFEBEBEB)
+    )
+
+    val brush = Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset(translateAnim - 500f, translateAnim - 500f),
+        end = Offset(translateAnim, translateAnim)
+    )
+
+    this.background(brush)
+}
+
+// 2. Individual Product Card Shimmer
+@Composable
+fun ProductCardShimmer() {
+    Card(
+        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Image Box Shimmer
+            Box(
+                modifier = Modifier.fillMaxWidth().height(100.dp).clip(RoundedCornerShape(8.dp))
+                    .productShimmerEffect()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Title Line 1 Shimmer
+            Box(
+                modifier = Modifier.fillMaxWidth(0.85f).height(12.dp).clip(RoundedCornerShape(4.dp))
+                    .productShimmerEffect()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Title Line 2 Shimmer
+            Box(
+                modifier = Modifier.fillMaxWidth(0.5f).height(12.dp).clip(RoundedCornerShape(4.dp))
+                    .productShimmerEffect()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Price Line Shimmer
+            Box(
+                modifier = Modifier.fillMaxWidth(0.4f).height(10.dp).clip(RoundedCornerShape(4.dp))
+                    .productShimmerEffect()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Button Shimmer
+            Box(
+                modifier = Modifier.fillMaxWidth().height(30.dp).clip(RoundedCornerShape(6.dp))
+                    .productShimmerEffect()
+            )
+        }
+    }
+}
+
+// 3. Full Screen Product Shimmer
+@Composable
+fun FullProductScreenShimmer() {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp)
+    ) {
+        // Search Bar Shimmer
+        Box(
+            modifier = Modifier.fillMaxWidth().height(50.dp).clip(RoundedCornerShape(8.dp))
+                .productShimmerEffect()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Category Filter Chips Shimmer
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()
+        ) {
+            repeat(3) {
+                Box(
+                    modifier = Modifier.width(80.dp).height(32.dp).clip(RoundedCornerShape(8.dp))
+                        .productShimmerEffect()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Grid of 6 Product Cards Shimmer
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(6) {
+                ProductCardShimmer()
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,8 +207,7 @@ fun ProductScreen(
     viewModel: ProductViewModel = viewModel(), onNavigateToDetails: ((Product) -> Unit)? = null
 ) {
     val isDark = isSystemInDarkTheme()
-    val bgColor =  LightBackground
-    val textColor =  Color.Black
+    val textColor = Color.Black
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -92,21 +217,35 @@ fun ProductScreen(
         modifier = Modifier.fillMaxSize().background(color = Color.White)
             .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = "All Products",
-            fontWeight = FontWeight.Bold,
-            color = textColor,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-        )
-
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 4.dp),
+            shape = RoundedCornerShape(14.dp),
+            color = OsakaRedLightBg
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "All Products",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OsakaRed
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Discover Our Full Collection",
+                    fontSize = 13.sp,
+                    color = OsakaRedHover
+                )
+            }
+        }
         when (val state = uiState) {
             is ProductUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = OsakaRed)
-                }
+                // Render full screen shimmer while loading
+                FullProductScreenShimmer()
             }
 
             is ProductUiState.Error -> {
@@ -176,8 +315,8 @@ fun ProductScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = OsakaRed,
                         unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                        focusedContainerColor =  Color(0xFFF8F8F8),
-                        unfocusedContainerColor =Color(0xFFF8F8F8)
+                        focusedContainerColor = Color(0xFFF8F8F8),
+                        unfocusedContainerColor = Color(0xFFF8F8F8)
                     )
                 )
 
@@ -237,21 +376,18 @@ fun ProductScreen(
 fun ProductCard(
     product: Product, isDark: Boolean = isSystemInDarkTheme(), onClick: () -> Unit
 ) {
-    val cardBg =  Color.White
+    val cardBg = Color.White
     val textColor = Color.Black
     val imageBg = Color.White
 
-    val sizeText = product.size.trim() ?: ""
+    val sizeText = product.size.trim()
     val isFan = sizeText in listOf("12", "16", "18", "12\"", "16\"", "18\"") || listOf(
-        "12",
-        "16",
-        "18"
+        "12", "16", "18"
     ).any { product.name.contains(it) }
 
     val categoryTag = if (isFan) "FAN" else "TV"
     val categoryIcon = if (isFan) Icons.Default.Air else Icons.Default.Tv
 
-    // Changed Fan background to Green
     val tagBackgroundColor = if (isFan) Color(0xFF2E7D32) else Color(0xFF1976D2)
 
     Card(
@@ -263,9 +399,7 @@ fun ProductCard(
         Column(
             modifier = Modifier.fillMaxWidth().padding(8.dp).background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
-
         ) {
-            // Compressed Image Box
             Box(
                 modifier = Modifier.fillMaxWidth().height(100.dp).clip(RoundedCornerShape(8.dp))
                     .background(imageBg)
@@ -279,13 +413,11 @@ fun ProductCard(
                     modifier = Modifier.fillMaxSize().padding(6.dp)
                 )
 
-                // Compact Badge with Green Background for FAN
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                     modifier = Modifier.padding(6.dp).align(Alignment.TopStart)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(tagBackgroundColor)
+                        .clip(RoundedCornerShape(4.dp)).background(tagBackgroundColor)
                         .padding(horizontal = 5.dp, vertical = 2.dp)
                 ) {
                     Icon(
@@ -305,7 +437,6 @@ fun ProductCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Title
             Text(
                 text = product.name,
                 fontSize = 11.sp,
@@ -320,7 +451,6 @@ fun ProductCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Price Row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
@@ -341,12 +471,10 @@ fun ProductCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // CTA Button
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor =  Color.Black,
-                    contentColor =   Color.White
+                    containerColor = Color.Black, contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(6.dp),
                 modifier = Modifier.fillMaxWidth().height(30.dp),
@@ -362,15 +490,15 @@ fun ProductCard(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailBottomSheet(
     product: Product, isDark: Boolean, onDismiss: () -> Unit
 ) {
-    val sheetBg =  Color.White
-    val textColor =  Color.Black
+    val sheetBg = Color.White
+    val textColor = Color.Black
 
-    // Forces the sheet to open expanded without requiring the user to drag up
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -382,8 +510,7 @@ fun ProductDetailBottomSheet(
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(16.dp))
-                    .background( Color(0xFFF5F5F5)),
-                contentAlignment = Alignment.Center
+                    .background(Color(0xFFF5F5F5)), contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
                     model = product.imageUrl,
@@ -441,26 +568,16 @@ fun CompactCategoryBar(
     ) {
         items(categories) { category ->
             val isSelected = category == selectedCategory
-
-            // Selected: Red background / Unselected: White background
             val containerColor = if (isSelected) Color.Black else Color.White
-
-            // Selected: White text / Unselected: Black text
             val textColor = if (isSelected) Color.White else Color.Black
 
             Box(
-                modifier = Modifier
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(containerColor)
-                    // Border added so unselected white buttons are visible on white backgrounds
-                    .border(
+                modifier = Modifier.height(32.dp).clip(RoundedCornerShape(8.dp))
+                    .background(containerColor).border(
                         width = 1.dp,
                         color = if (isSelected) Color.White else Color(0xFFE0E0E0),
                         shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable { onCategorySelected(category) }
-                    .padding(horizontal = 12.dp),
+                    ).clickable { onCategorySelected(category) }.padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

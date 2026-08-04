@@ -1,44 +1,28 @@
 package org.freedu.osakatelevison.ui.presentation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,12 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.freedu.osakatelevison.ui.theme.DarkMutedForeground
-import org.freedu.osakatelevison.ui.theme.DarkSecondary
-import org.freedu.osakatelevison.ui.theme.LightBackground
-import org.freedu.osakatelevison.ui.theme.LightMutedForeground
 import org.freedu.osakatelevison.ui.theme.OsakaRed
-import org.freedu.osakatelevison.ui.theme.OsakaRedLight
 
 sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomNavItem("home", "Home", Icons.Default.Home)
@@ -80,21 +59,26 @@ fun MainAppScreen() {
                 currentScreen = currentScreen, // Pass currentScreen state down
                 onTabSelected = { screen ->
                     currentScreen = screen
-                }
-            )
-        }
-    ) { paddingValues ->
+                })
+        }) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (currentScreen) {
                 BottomNavItem.Home -> HomeScreen(
                     onNavigateToProducts = {
                         currentScreen = BottomNavItem.Product // Switch screen to Product
-                    }
-                )
+                    })
+
                 BottomNavItem.Product -> ProductScreen()
                 BottomNavItem.Gallery -> GalleryScreen()
                 BottomNavItem.Contact -> ContactScreen()
-                BottomNavItem.About -> AboutUsScreen()
+                BottomNavItem.About -> AboutUsScreen(
+                    onNavigate = { route ->
+                        when (route) {
+                            "all_products" -> currentScreen = BottomNavItem.Product
+                            "visual_gallery" -> currentScreen = BottomNavItem.Gallery
+                            "get_in_touch" -> currentScreen = BottomNavItem.Contact
+                        }
+                    })
             }
         }
     }
@@ -183,8 +167,7 @@ fun OsakaBottomNavigationBar(
             }
         }
     }
-}*/
-/*
+}*//*
 @Composable
 fun OsakaBottomNavigationBar(
     currentScreen: BottomNavItem,
@@ -283,8 +266,7 @@ fun OsakaBottomNavigationBar(
 
 @Composable
 fun OsakaBottomNavigationBar(
-    currentScreen: BottomNavItem,
-    onTabSelected: (BottomNavItem) -> Unit
+    currentScreen: BottomNavItem, onTabSelected: (BottomNavItem) -> Unit
 ) {
     val items = listOf(
         BottomNavItem.Home,
@@ -303,20 +285,14 @@ fun OsakaBottomNavigationBar(
     Surface(
         color = bgColor,
         tonalElevation = 6.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
+        modifier = Modifier.fillMaxWidth().navigationBarsPadding()
     ) {
         Column {
             HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = dividerColor
+                modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = dividerColor
             )
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
+                modifier = Modifier.fillMaxWidth().height(60.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -326,16 +302,11 @@ fun OsakaBottomNavigationBar(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .clickable { onTabSelected(item) }
-                    ) {
+                        modifier = Modifier.fillMaxHeight().weight(1f)
+                            .clickable { onTabSelected(item) }) {
                         // Top active indicator bar
                         Box(
-                            modifier = Modifier
-                                .width(28.dp)
-                                .height(3.dp)
+                            modifier = Modifier.width(28.dp).height(3.dp)
                                 .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
                                 .background(if (isSelected) activeColor else Color.Transparent)
                         )

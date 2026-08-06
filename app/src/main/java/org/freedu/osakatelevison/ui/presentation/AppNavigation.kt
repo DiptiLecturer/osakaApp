@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -54,6 +55,7 @@ sealed class BottomNavItem(val route: String, val title: String, val icon: Image
     object Gallery : BottomNavItem("gallery", "Gallery", Icons.Default.Collections) // Updated Icon
     object Contact : BottomNavItem("contact", "Contact", Icons.Default.Phone)
     object About : BottomNavItem("about", "About", Icons.Default.Info)
+    object LocationMap : BottomNavItem("location_map", "Locations", Icons.Default.Place)
 }
 
 @Composable
@@ -96,8 +98,10 @@ fun MainAppScreen() {
                             "all_products" -> currentScreen = BottomNavItem.Product
                             "visual_gallery" -> currentScreen = BottomNavItem.Gallery
                             "get_in_touch" -> currentScreen = BottomNavItem.Contact
+                            "location_map" -> currentScreen = BottomNavItem.LocationMap
                         }
                     })
+                BottomNavItem.LocationMap -> LocationMapScreen()
             }
         }
     }

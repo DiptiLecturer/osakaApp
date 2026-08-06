@@ -95,7 +95,7 @@ fun AboutUsScreen(
     val navItems = listOf(
         NavGridItem("Products", Icons.Outlined.Tv, "all_products"),
         NavGridItem("Gallery", Icons.Outlined.Collections, "visual_gallery"),
-        NavGridItem("Locations", Icons.Outlined.Place, "scroll_to_locations"),
+        NavGridItem("Locations", Icons.Outlined.Place, "location_map"),
         NavGridItem("Contact Us", Icons.Outlined.SupportAgent, "get_in_touch")
     )
 
@@ -210,7 +210,7 @@ fun AboutUsScreen(
                                 gridState.animateScrollToItem(locationsSectionIndex)
                             }
                         } else {
-                            onNavigate(nav.route) // Triggers navigation callback
+                            onNavigate(nav.route)
                         }
                     }
                 )

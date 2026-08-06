@@ -206,7 +206,7 @@ fun WebsiteCarousel(slides: List<HeroSlide>) {
     // Fixed Auto-scroll loop using settledPage snapshot
     LaunchedEffect(Unit) {
         snapshotFlow { pagerState.settledPage }.collectLatest { page ->
-            delay(1000.milliseconds)
+            delay(1500.milliseconds)
             val nextPage = (page + 1) % slides.size
             pagerState.animateScrollToPage(
                 page = nextPage, animationSpec = tween(durationMillis = 600)
